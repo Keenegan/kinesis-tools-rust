@@ -1,4 +1,5 @@
-#![allow(dead_code, unused_variables)]
+#![allow(dead_code, unused_variables, unused)]
+
 use aws_sdk_kinesis::{Client, Error, Region};
 use std::{env};
 use std::str;
@@ -10,12 +11,23 @@ use std::io::prelude::*;
 use tokio::sync::mpsc;
 use tokio::task;
 use flate2::read::{ZlibDecoder};
+use clap::Parser;
+
+#[derive(Parser, Clone)]
+struct Args {
+    stream: String,
+    aws_region: Option<String>,
+    aws_profile: Option<String>,
+    aws_key_id: Option<String>,
+    aws_secret_access: Option<String>,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let client = get_client().await;
-    let stream = env::args().nth(1).expect("no pattern given");
-    let _ = read_stream(&client, &stream).await;
+    let args = Args::parse();
+    let client = get_client(args.clone()).await;
+    let stream = args.stream;
+    read_stream(&client, &stream).await;
     Ok(())
 }
 
@@ -75,7 +87,6 @@ async fn read_stream(client: &Client, stream: &String) -> Result<(), Error> {
         rx.recv().await.unwrap();
     }
     Ok(())
-
 }
 
 async fn listen_to_shard(shard: Shard, client: Client, stream: String) {
@@ -107,13 +118,16 @@ async fn listen_to_shard(shard: Shard, client: Client, stream: String) {
     }
 }
 
-async fn get_client() -> Client {
-    let _ = dotenv::dotenv().is_ok();
+async fn get_client(args: Args) -> Client {
+    dotenv::dotenv().is_ok();
+
+    let region: String = args.aws_region.unwrap_or(String::from("eu-west-3"));
+    let region_as_str = region.as_str();
     let credentials_provider = ProfileFileCredentialsProvider::builder()
         .profile_name(env::var("AWS_PROFILE_NAME").unwrap())
         .build();
     let provider = AssumeRoleProvider::builder(env::var("AWS_ROLE_ARN").unwrap())
-        .region(Region::from_static("eu-west-3"))
+        .region(Region::from_static(region_as_str))
         .session_name(env::var("AWS_SESSION_NAME").unwrap())
         .build(Arc::new(credentials_provider) as Arc<_>);
     let shared_config = aws_config::from_env()
