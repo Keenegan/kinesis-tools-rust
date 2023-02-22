@@ -11,23 +11,27 @@ use std::io::prelude::*;
 use tokio::sync::mpsc;
 use tokio::task;
 use flate2::read::{ZlibDecoder};
-use clap::Parser;
+use clap::{arg, Parser};
 
 #[derive(Parser, Clone)]
 struct Args {
+    #[arg(long)]
     stream: String,
+    #[arg(long)]
     aws_region: Option<String>,
+    #[arg(long)]
     aws_profile: Option<String>,
-    aws_key_id: Option<String>,
-    aws_secret_access: Option<String>,
+    #[arg(long)]
+    aws_role_arn: Option<String>,
+    #[arg(long)]
+    aws_session_name: Option<String>,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let args = Args::parse();
     let client = get_client(args.clone()).await;
-    let stream = args.stream;
-    read_stream(&client, &stream).await;
+    read_stream(&client, args.clone()).await;
     Ok(())
 }
 
@@ -64,8 +68,9 @@ async fn show_stream(client: &Client, stream: &String) -> Result<(), Error> {
     Ok(())
 }
 
-async fn read_stream(client: &Client, stream: &String) -> Result<(), Error> {
-    let _ = show_stream(client, stream).await;
+async fn read_stream(client: &Client, args: Args) -> Result<(), Error> {
+    let stream = &args.stream;
+    show_stream(client, stream).await;
     let resp = client.describe_stream().stream_name(stream).send().await?;
     let desc = resp.stream_description.unwrap();
     let shards = desc.shards.unwrap();
@@ -120,15 +125,17 @@ async fn listen_to_shard(shard: Shard, client: Client, stream: String) {
 
 async fn get_client(args: Args) -> Client {
     dotenv::dotenv().is_ok();
+    let region = args.aws_region.unwrap_or(env::var("AWS_REGION").unwrap_or(String::from("eu-west-3")));
+    let profile = args.aws_profile.unwrap_or(env::var("AWS_PROFILE_NAME").unwrap());
+    let role_arn = args.aws_role_arn.unwrap_or(env::var("AWS_ROLE_ARN").unwrap());
+    let session_name = args.aws_session_name.unwrap_or(env::var("AWS_SESSION_NAME").unwrap());
 
-    let region: String = args.aws_region.unwrap_or(String::from("eu-west-3"));
-    let region_as_str = region.as_str();
     let credentials_provider = ProfileFileCredentialsProvider::builder()
-        .profile_name(env::var("AWS_PROFILE_NAME").unwrap())
+        .profile_name(profile)
         .build();
-    let provider = AssumeRoleProvider::builder(env::var("AWS_ROLE_ARN").unwrap())
-        .region(Region::from_static(region_as_str))
-        .session_name(env::var("AWS_SESSION_NAME").unwrap())
+    let provider = AssumeRoleProvider::builder(role_arn)
+        .region(Region::new(region))
+        .session_name(session_name)
         .build(Arc::new(credentials_provider) as Arc<_>);
     let shared_config = aws_config::from_env()
         .credentials_provider(provider)
