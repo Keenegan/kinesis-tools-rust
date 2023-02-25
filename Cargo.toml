@@ -1,7 +1,8 @@
 [package]
-name = "rust"
+name = "ktr"
 version = "0.1.0"
 edition = "2021"
+description = "KTR (Kinesis Tools Rust) allow to read aws kinesis streams"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

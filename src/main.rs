@@ -1,15 +1,11 @@
 #![allow(dead_code, unused_variables, unused)]
+extern crate serde_json;
 
-use std::env;
 use std::io::prelude::*;
-use std::str;
-use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 
-use aws_config::profile::ProfileFileCredentialsProvider;
-use aws_config::sts::AssumeRoleProvider;
-use aws_sdk_kinesis::{Client, Error, Region};
+use aws_sdk_kinesis::{Client, Error};
 use aws_sdk_kinesis::model::{Shard, ShardIteratorType};
 use clap::{arg, Parser};
 use flate2::read::ZlibDecoder;
@@ -18,9 +14,6 @@ use tokio::sync::mpsc;
 use tokio::task;
 
 use crate::client::{ClientConfig, get_client};
-
-#[macro_use]
-extern crate serde_json;
 
 mod client;
 
@@ -43,7 +36,7 @@ async fn main() -> Result<(), Error> {
     let args = Args::parse();
     let stream = &args.stream;
     let (client, client_config) = get_client(args.clone()).await;
-    read_stream(&client, &client_config, stream).await;
+    let _ = read_stream(&client, &client_config, stream).await;
     Ok(())
 }
 
@@ -68,9 +61,7 @@ async fn read_stream(client: &Client, client_config: &ClientConfig, stream: &Str
     println!("ARN:               {}:", desc.stream_arn.unwrap());
     println!("Status:            {:?}", desc.stream_status.unwrap());
     println!("Open shards:       {:?}", shards.len());
-    shards.iter()
-        .map(|shard| println!("    {}", shard.shard_id().unwrap()))
-        .collect::<Vec<_>>();
+    shards.iter().for_each(|shard| println!("    {}", shard.shard_id().unwrap()));
     println!("Encryption:        {:?}", desc.encryption_type.unwrap());
     let (tx, mut rx) = mpsc::channel(shards.len());
 
@@ -118,7 +109,7 @@ async fn listen_to_shard(shard: Shard, client: Client, stream: String) {
             let mut result = String::new();
             decoder.read_to_string(&mut result).unwrap();
 
-            let value:Value = serde_json::from_str(&*result).unwrap();
+            let value: Value = serde_json::from_str(&*result).unwrap();
             let pretty = serde_json::to_string_pretty(&value);
             println!("{}", pretty.unwrap());
         }

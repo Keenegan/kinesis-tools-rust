@@ -818,6 +818,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "kinesis-tools-rust"
+version = "0.1.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-kinesis",
+ "base64 0.13.1",
+ "clap",
+ "dotenv",
+ "flate2",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1076,20 +1090,6 @@ dependencies = [
  "untrusted",
  "web-sys",
  "winapi",
-]
-
-[[package]]
-name = "rust"
-version = "0.1.0"
-dependencies = [
- "aws-config",
- "aws-sdk-kinesis",
- "base64 0.13.1",
- "clap",
- "dotenv",
- "flate2",
- "serde_json",
- "tokio",
 ]
 
 [[package]]
