@@ -4,6 +4,8 @@ use std::env;
 use std::io::prelude::*;
 use std::str;
 use std::sync::Arc;
+use std::thread::sleep;
+use std::time::Duration;
 
 use aws_config::profile::ProfileFileCredentialsProvider;
 use aws_config::sts::AssumeRoleProvider;
@@ -11,10 +13,14 @@ use aws_sdk_kinesis::{Client, Error, Region};
 use aws_sdk_kinesis::model::{Shard, ShardIteratorType};
 use clap::{arg, Parser};
 use flate2::read::ZlibDecoder;
+use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio::task;
 
 use crate::client::{ClientConfig, get_client};
+
+#[macro_use]
+extern crate serde_json;
 
 mod client;
 
@@ -52,8 +58,8 @@ async fn read_stream(client: &Client, client_config: &ClientConfig, stream: &Str
     println!("========================================================================================");
     println!("AWS_REGION                     | {}", client_config.region);
     println!("AWS_PROFILE                    | {}", client_config.profile);
-    println!("AWS_PROFILE                    | {}", client_config.role_arn);
-    println!("AWS_PROFILE                    | {}", client_config.session_name);
+    println!("AWS_ROLE                       | {}", client_config.role_arn);
+    println!("AWS_SESSION_NAME               | {}", client_config.session_name);
 
     println!("========================================================================================");
     println!("|                                    Stream description                                |");
@@ -65,7 +71,7 @@ async fn read_stream(client: &Client, client_config: &ClientConfig, stream: &Str
     shards.iter()
         .map(|shard| println!("    {}", shard.shard_id().unwrap()))
         .collect::<Vec<_>>();
-    println!("  Encryption:        {:?}", desc.encryption_type.unwrap());
+    println!("Encryption:        {:?}", desc.encryption_type.unwrap());
     let (tx, mut rx) = mpsc::channel(shards.len());
 
     println!("========================================================================================");
@@ -111,7 +117,11 @@ async fn listen_to_shard(shard: Shard, client: Client, stream: String) {
             let mut decoder = ZlibDecoder::new(data);
             let mut result = String::new();
             decoder.read_to_string(&mut result).unwrap();
-            println!("{result}");
+
+            let value:Value = serde_json::from_str(&*result).unwrap();
+            let pretty = serde_json::to_string_pretty(&value);
+            println!("{}", pretty.unwrap());
         }
+        sleep(Duration::from_secs(1));
     }
 }
