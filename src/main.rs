@@ -1,20 +1,8 @@
-#![allow(dead_code, unused_variables, unused)]
 extern crate serde_json;
 
-use std::io::prelude::*;
-use std::sync::Arc;
-use std::thread::sleep;
-use std::time::Duration;
-
-use aws_sdk_kinesis::{Client, Error};
-use aws_sdk_kinesis::model::{Shard, ShardIteratorType};
+use aws_sdk_kinesis::{Error};
 use clap::{arg, Parser};
-use flate2::read::ZlibDecoder;
-use serde_json::Value;
-use tokio::sync::mpsc;
-use tokio::task;
-
-use crate::client::{ClientConfig, get_client};
+use crate::client::{get_client};
 use crate::read_stream::read_stream;
 
 mod client;

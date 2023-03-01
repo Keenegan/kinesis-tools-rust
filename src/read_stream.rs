@@ -5,13 +5,12 @@ use std::time::Duration;
 
 use aws_sdk_kinesis::{Client, Error};
 use aws_sdk_kinesis::model::{Shard, ShardIteratorType};
-use clap::{arg, Parser};
 use flate2::read::ZlibDecoder;
 use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio::task;
 
-use crate::client::{ClientConfig, get_client};
+use crate::client::{ClientConfig};
 
 pub async fn read_stream(client: Arc<Client>, client_config: &ClientConfig, stream: &String) -> Result<(), Error> {
     let resp = client.describe_stream().stream_name(stream).send().await.expect("No stream found.");
