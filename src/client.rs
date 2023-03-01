@@ -14,7 +14,7 @@ pub struct ClientConfig {
     pub session_name: String,
 }
 
-pub async fn get_client(args: Args) -> (Client, ClientConfig) {
+pub async fn get_client(args: Args) -> (Arc<Client>, ClientConfig) {
     let _ = dotenv::dotenv().is_ok();
     let client_config = ClientConfig {
         region: args.aws_region.unwrap_or(env::var("AWS_REGION").unwrap_or(String::from("eu-west-3"))),
@@ -34,5 +34,5 @@ pub async fn get_client(args: Args) -> (Client, ClientConfig) {
         .credentials_provider(provider)
         .load()
         .await;
-    (Client::new(&shared_config), client_config)
+    (Arc::new(Client::new(&shared_config)), client_config)
 }

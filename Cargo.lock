@@ -818,7 +818,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kinesis-tools-rust"
+name = "ktr"
 version = "0.1.0"
 dependencies = [
  "aws-config",

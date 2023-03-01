@@ -2,6 +2,7 @@
 extern crate serde_json;
 
 use std::io::prelude::*;
+use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -36,11 +37,11 @@ async fn main() -> Result<(), Error> {
     let args = Args::parse();
     let stream = &args.stream;
     let (client, client_config) = get_client(args.clone()).await;
-    let _ = read_stream(&client, &client_config, stream).await;
+    let _ = read_stream(client, &client_config, stream).await;
     Ok(())
 }
 
-async fn read_stream(client: &Client, client_config: &ClientConfig, stream: &String) -> Result<(), Error> {
+async fn read_stream(client: Arc<Client>, client_config: &ClientConfig, stream: &String) -> Result<(), Error> {
     let resp = client.describe_stream().stream_name(stream).send().await.expect("No stream found.");
     let desc = resp.stream_description.unwrap();
     let shards = desc.shards.unwrap();
@@ -84,7 +85,7 @@ async fn read_stream(client: &Client, client_config: &ClientConfig, stream: &Str
     Ok(())
 }
 
-async fn listen_to_shard(shard: Shard, client: Client, stream: String) {
+async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
     let shard_id = shard.shard_id().unwrap();
     let shard_iter_output = client.get_shard_iterator()
         .stream_name(stream)
