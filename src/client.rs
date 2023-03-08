@@ -1,48 +1,13 @@
-use std::env;
 use std::sync::Arc;
+use aws_config::meta::region::RegionProviderChain;
 
-use aws_config::profile::ProfileFileCredentialsProvider;
-use aws_config::sts::AssumeRoleProvider;
-use aws_sdk_kinesis::{Client, Region};
+use aws_sdk_kinesis::{Client};
 
 use crate::Args;
 
-pub struct ClientConfig {
-    pub region: String,
-    pub profile: String,
-    pub role_arn: String,
-    pub session_name: String,
-}
-
-pub async fn get_client(args: Args) -> (Arc<Client>, ClientConfig) {
+pub async fn get_client(_args: Args) -> Arc<Client> {
     let _ = dotenv::dotenv().is_ok();
-    let client_config = ClientConfig {
-        region: args.region.unwrap_or(env::var("AWS_REGION").unwrap_or(String::from("eu-west-3"))),
-        profile: args.profile.unwrap_or(env::var("AWS_PROFILE_NAME").unwrap()),
-        role_arn: args.role_arn.unwrap_or(env::var("AWS_ROLE_ARN").unwrap()),
-        session_name: args.session_name.unwrap_or(env::var("AWS_SESSION_NAME").unwrap()),
-    };
-
-    let credentials_provider = ProfileFileCredentialsProvider::builder()
-        .profile_name(client_config.profile.clone())
-        .build();
-    let provider = AssumeRoleProvider::builder(client_config.role_arn.clone())
-        .region(Region::new(client_config.region.clone()))
-        .session_name(client_config.session_name.clone())
-        .build(Arc::new(credentials_provider) as Arc<_>);
-    let shared_config = aws_config::from_env()
-        .credentials_provider(provider)
-        .load()
-        .await;
-    (Arc::new(Client::new(&shared_config)), client_config)
-}
-
-pub fn print_client_configuration(client_config : ClientConfig) {
-    println!("========================================================================================");
-    println!("|                                    Context loaded                                    |");
-    println!("========================================================================================");
-    println!("AWS_REGION                     | {}", client_config.region);
-    println!("AWS_PROFILE                    | {}", client_config.profile);
-    println!("AWS_ROLE                       | {}", client_config.role_arn);
-    println!("AWS_SESSION_NAME               | {}", client_config.session_name);
+    let region_provider = RegionProviderChain::default_provider().or_else("eu-west-3");
+    let config = aws_config::from_env().region(region_provider).load().await;
+    Arc::new(Client::new(&config))
 }

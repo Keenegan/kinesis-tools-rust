@@ -17,12 +17,24 @@ Go to the project directory
   cd kinesis-tools-rust
 ```
 
+List streams
+
+```bash
+  cargo run -- list
+```
+
 Read stream
 
 ```bash
-  cargo run -- --stream <your_stream>
+  cargo run -- read --stream <your_stream>
 ```
 
 Print help
 ```bash
  cargo run -- --help
+```
+
+You can override env variable like this
+```bash
+  AWS_PROFILE=<your profile> cargo run -- list
+```
