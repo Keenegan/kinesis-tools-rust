@@ -17,10 +17,10 @@ pub struct ClientConfig {
 pub async fn get_client(args: Args) -> (Arc<Client>, ClientConfig) {
     let _ = dotenv::dotenv().is_ok();
     let client_config = ClientConfig {
-        region: args.aws_region.unwrap_or(env::var("AWS_REGION").unwrap_or(String::from("eu-west-3"))),
-        profile: args.aws_profile.unwrap_or(env::var("AWS_PROFILE_NAME").unwrap()),
-        role_arn: args.aws_role_arn.unwrap_or(env::var("AWS_ROLE_ARN").unwrap()),
-        session_name: args.aws_session_name.unwrap_or(env::var("AWS_SESSION_NAME").unwrap()),
+        region: args.region.unwrap_or(env::var("AWS_REGION").unwrap_or(String::from("eu-west-3"))),
+        profile: args.profile.unwrap_or(env::var("AWS_PROFILE_NAME").unwrap()),
+        role_arn: args.role_arn.unwrap_or(env::var("AWS_ROLE_ARN").unwrap()),
+        session_name: args.session_name.unwrap_or(env::var("AWS_SESSION_NAME").unwrap()),
     };
 
     let credentials_provider = ProfileFileCredentialsProvider::builder()

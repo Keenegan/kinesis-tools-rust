@@ -1,32 +1,54 @@
 extern crate serde_json;
 
 use aws_sdk_kinesis::{Error};
-use clap::{arg, Parser};
+use clap::{Parser, Subcommand, ValueEnum};
 use crate::client::{get_client};
 use crate::read_stream::read_stream;
+use crate::list_streams::list_streams;
 
 mod client;
 mod read_stream;
+mod list_streams;
 
 #[derive(Parser, Clone, Debug)]
+#[command(name = "ktr")]
+#[command(about = "Kinesis Tools Rust allow to read/write/create a kinesis stream", long_about = None)]
 pub struct Args {
+    #[command(subcommand)]
+    command: Commands,
     #[arg(long)]
-    stream: String,
+    region: Option<String>,
     #[arg(long)]
-    aws_region: Option<String>,
+    profile: Option<String>,
     #[arg(long)]
-    aws_profile: Option<String>,
+    role_arn: Option<String>,
     #[arg(long)]
-    aws_role_arn: Option<String>,
-    #[arg(long)]
-    aws_session_name: Option<String>,
+    session_name: Option<String>,
+}
+
+#[derive(Debug, Subcommand, Clone)]
+enum Commands {
+    /// List all kinesis streams
+    List {},
+    /// Read a kinesis stream
+    Read {
+        /// The stream name to read
+        #[arg(long)]
+        stream: String
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let args = Args::parse();
-    let stream = &args.stream;
     let (client, client_config) = get_client(args.clone()).await;
-    let _ = read_stream(client, &client_config, stream).await;
+    match args.command {
+        Commands::Read { stream} => {
+            let _ = read_stream(client, &client_config, &stream).await;
+        },
+        Commands::List {} => {
+            list_streams(client, &client_config).await;
+        }
+    }
     Ok(())
 }
