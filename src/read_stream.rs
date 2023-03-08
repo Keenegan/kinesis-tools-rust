@@ -10,21 +10,11 @@ use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio::task;
 
-use crate::client::ClientConfig;
-
-pub async fn read_stream(client: Arc<Client>, client_config: &ClientConfig, stream: &String) -> Result<(), Error> {
+pub async fn read_stream(client: Arc<Client>, stream: &String) -> Result<(), Error> {
     let resp = client.describe_stream().stream_name(stream).send().await.expect("No stream found.");
     let desc = resp.stream_description.unwrap();
     let shards = desc.shards.unwrap();
     let shard_count = shards.len();
-
-    println!("========================================================================================");
-    println!("|                                    Context loaded                                    |");
-    println!("========================================================================================");
-    println!("AWS_REGION                     | {}", client_config.region);
-    println!("AWS_PROFILE                    | {}", client_config.profile);
-    println!("AWS_ROLE                       | {}", client_config.role_arn);
-    println!("AWS_SESSION_NAME               | {}", client_config.session_name);
 
     println!("========================================================================================");
     println!("|                                    Stream description                                |");

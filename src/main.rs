@@ -3,7 +3,7 @@ extern crate serde_json;
 use aws_sdk_kinesis::Error;
 use clap::{Parser, Subcommand};
 
-use crate::client::get_client;
+use crate::client::{get_client, print_client_configuration};
 use crate::list_streams::list_streams;
 use crate::read_stream::read_stream;
 
@@ -43,12 +43,14 @@ enum Commands {
 async fn main() -> Result<(), Error> {
     let args = Args::parse();
     let (client, client_config) = get_client(args.clone()).await;
+    print_client_configuration(client_config);
+
     match args.command {
         Commands::Read { stream} => {
-            let _ = read_stream(client, &client_config, &stream).await;
+            let _ = read_stream(client, &stream).await;
         },
         Commands::List {} => {
-            list_streams(client, &client_config).await;
+            list_streams(client).await;
         }
     }
     Ok(())

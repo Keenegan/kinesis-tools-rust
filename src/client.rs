@@ -36,3 +36,13 @@ pub async fn get_client(args: Args) -> (Arc<Client>, ClientConfig) {
         .await;
     (Arc::new(Client::new(&shared_config)), client_config)
 }
+
+pub fn print_client_configuration(client_config : ClientConfig) {
+    println!("========================================================================================");
+    println!("|                                    Context loaded                                    |");
+    println!("========================================================================================");
+    println!("AWS_REGION                     | {}", client_config.region);
+    println!("AWS_PROFILE                    | {}", client_config.profile);
+    println!("AWS_ROLE                       | {}", client_config.role_arn);
+    println!("AWS_SESSION_NAME               | {}", client_config.session_name);
+}
