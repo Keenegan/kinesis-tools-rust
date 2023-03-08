@@ -10,7 +10,7 @@ use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio::task;
 
-use crate::client::{ClientConfig};
+use crate::client::ClientConfig;
 
 pub async fn read_stream(client: Arc<Client>, client_config: &ClientConfig, stream: &String) -> Result<(), Error> {
     let resp = client.describe_stream().stream_name(stream).send().await.expect("No stream found.");

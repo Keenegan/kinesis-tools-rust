@@ -1,16 +1,8 @@
-use std::io::prelude::*;
 use std::sync::Arc;
-use std::thread::sleep;
-use std::time::Duration;
 
 use aws_sdk_kinesis::{Client, Error};
-use aws_sdk_kinesis::model::{Shard, ShardIteratorType};
-use flate2::read::ZlibDecoder;
-use serde_json::Value;
-use tokio::sync::mpsc;
-use tokio::task;
 
-use crate::client::{ClientConfig};
+use crate::client::ClientConfig;
 
 pub async fn list_streams(client: Arc<Client>, client_config: &ClientConfig) -> Result<(), Error> {
     let resp = client.list_streams().send().await?;

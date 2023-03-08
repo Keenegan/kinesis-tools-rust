@@ -1,10 +1,11 @@
 extern crate serde_json;
 
-use aws_sdk_kinesis::{Error};
-use clap::{Parser, Subcommand, ValueEnum};
-use crate::client::{get_client};
-use crate::read_stream::read_stream;
+use aws_sdk_kinesis::Error;
+use clap::{Parser, Subcommand};
+
+use crate::client::get_client;
 use crate::list_streams::list_streams;
+use crate::read_stream::read_stream;
 
 mod client;
 mod read_stream;
