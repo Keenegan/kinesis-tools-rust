@@ -7,11 +7,13 @@ use crate::client::{get_client};
 use crate::list_streams::list_streams;
 use crate::read_stream::read_stream;
 use crate::create_stream::create_stream;
+use crate::delete_stream::delete_stream;
 
 mod client;
 mod read_stream;
 mod list_streams;
 mod create_stream;
+mod delete_stream;
 
 #[derive(Parser, Clone, Debug)]
 #[command(name = "ktr")]
@@ -39,6 +41,12 @@ enum Commands {
         #[arg(long)]
         shard_count: Option<i32>,
     },
+    /// Delete a kinesis stream
+    Delete {
+        /// The stream name to create
+        #[arg(long)]
+        stream: String,
+    },
 }
 
 #[tokio::main]
@@ -56,6 +64,9 @@ async fn main() -> Result<(), Error> {
         Commands::Create { stream, shard_count} => {
             let _ = create_stream(client, stream, shard_count).await;
         },
+        Commands::Delete {stream} => {
+            let _ = delete_stream(client, stream).await;
+        }
     }
     Ok(())
 }
