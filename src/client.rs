@@ -1,7 +1,7 @@
-use std::sync::Arc;
 use aws_config::meta::region::RegionProviderChain;
+use std::sync::Arc;
 
-use aws_sdk_kinesis::{Client};
+use aws_sdk_kinesis::Client;
 
 use crate::Args;
 
