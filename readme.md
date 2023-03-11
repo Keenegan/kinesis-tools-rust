@@ -1,6 +1,6 @@
-# Kinesis-tools-rust
+# kinesis-tools-rust
 
-This project allow to read an AWS Kinesis stream
+This project allows you to interact with AWS Kinesis stream
 
 
 ## Run Locally
