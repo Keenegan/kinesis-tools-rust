@@ -5,36 +5,30 @@ This project allow to read an AWS Kinesis stream
 
 ## Run Locally
 
-Clone the project
-
 ```bash
   git clone https://github.com/Keenegan/kinesis-tools-rust
-```
-
-Go to the project directory
-
-```bash
   cd kinesis-tools-rust
 ```
 
-List streams
+## Usage
 
 ```bash
-  cargo run -- list
+Kinesis Tools Rust allow to read/write/create a kinesis stream
+
+Usage: ktr <COMMAND>
+
+Commands:
+  list    List all kinesis streams
+  read    Read a kinesis stream
+  create  Create a kinesis stream
+  delete  Delete a kinesis stream
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
 ```
 
-Read stream
-
-```bash
-  cargo run -- read --stream <your_stream>
-```
-
-Print help
-```bash
- cargo run -- --help
-```
-
-You can override env variable like this
+You can override env variable
 ```bash
   AWS_PROFILE=<your profile> cargo run -- list
 ```
