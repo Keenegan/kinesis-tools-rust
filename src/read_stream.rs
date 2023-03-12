@@ -124,7 +124,6 @@ fn unzip_input(input: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
 }
 
 fn format_result(result: String) -> String {
-    //TODO write code to serde json only if required
-    //return serde_json::to_string_pretty(&result).unwrap()
-    result
+    let value: Value = serde_json::from_str(&result).unwrap();
+    serde_json::to_string_pretty(&value).unwrap()
 }
