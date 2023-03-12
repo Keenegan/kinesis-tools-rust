@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use aws_sdk_kinesis::model::{Shard, ShardIteratorType};
 use aws_sdk_kinesis::{Client, Error};
-use flate2::read::ZlibDecoder;
+use flate2::read::{GzDecoder, ZlibDecoder};
 use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio::task;
@@ -87,15 +87,43 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
         shard_iter = get_records.next_shard_iterator();
         records = get_records.records().unwrap();
         if !records.is_empty() {
-            let data = records.first().unwrap().data().unwrap().as_ref();
-            let mut decoder = ZlibDecoder::new(data);
-            let mut result = String::new();
-            decoder.read_to_string(&mut result).unwrap();
-
-            let value: Value = serde_json::from_str(&result).unwrap();
-            let pretty = serde_json::to_string_pretty(&value);
-            println!("{}", pretty.unwrap());
+            let data = records
+                .first()
+                .unwrap()
+                .data()
+                .expect("Error while reading data")
+                .as_ref();
+            let result = unzip_input(data).expect("Error while unzping data");
+            println!("{}", format_result(result));
         }
         sleep(Duration::from_secs(1));
     }
+}
+
+fn unzip_input(input: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+    let mut buffer = String::new();
+
+    let mut zlib_decoder = ZlibDecoder::new(input);
+    match zlib_decoder.read_to_string(&mut buffer) {
+        Ok(_) => return Ok(buffer),
+        Err(_) => {}
+    }
+
+    let mut gz_decoder = GzDecoder::new(input);
+    buffer.clear();
+    match gz_decoder.read_to_string(&mut buffer) {
+        Ok(_) => return Ok(buffer),
+        Err(_) => {}
+    }
+
+    buffer.clear();
+    match std::io::Cursor::new(input).read_to_string(&mut buffer) {
+        Ok(_) => return Ok(buffer),
+        Err(e) => return Err(Box::new(e)),
+    }
+}
+
+fn format_result(result: String) -> String {
+    let value: Value = serde_json::from_str(&result).unwrap();
+    serde_json::to_string_pretty(&value).unwrap()
 }
