@@ -29,7 +29,7 @@ pub struct Args {
 enum Commands {
     /// List all streams
     List {},
-    /// Listen to a stream
+    /// Read upcoming events from a stream
     Read {
         /// The stream name to read
         #[arg(long, short)]
@@ -45,16 +45,16 @@ enum Commands {
     },
     /// Delete a stream
     Delete {
-        /// The stream name to create
+        /// The stream name to delete
         #[arg(long, short)]
         stream: String,
     },
     /// Put record into a stream
     Put {
-        /// The stream name to create
+        /// The stream where data will be sent
         #[arg(long, short)]
         stream: String,
-        /// The path to the file to read
+        /// The path to a file containing a json payload
         #[arg(long, short)]
         path: std::path::PathBuf,
     },

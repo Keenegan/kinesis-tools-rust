@@ -18,10 +18,11 @@ Kinesis Tools Rust allow to read/write/create a kinesis stream
 Usage: ktr <COMMAND>
 
 Commands:
-  list    List all kinesis streams
-  read    Read a kinesis stream
-  create  Create a kinesis stream
-  delete  Delete a kinesis stream
+  list    List all streams
+  read    Read upcoming events from a stream
+  create  Create a new stream
+  delete  Delete a stream
+  put     Put record into a stream
   help    Print this message or the help of the given subcommand(s)
 
 Options:
