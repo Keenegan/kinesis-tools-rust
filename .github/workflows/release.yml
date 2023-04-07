@@ -1,13 +1,11 @@
 name: Build and Release
 
 on:
-  push:
-    tags:
-      - '*'
+  release:
+    types: [created]
 
 jobs:
   release-linux:
-    if: ${{ github.event.label.name == 'release' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,35 +22,35 @@ jobs:
       - name: Build for ARM64 Linux
         run: |
           cargo build --target=aarch64-unknown-linux-gnu --release
-          mv target/aarch64-unknown-linux-gnu/release/ktr target/aarch64-unknown-linux-gnu/release/ktr-aarch64-unknown-linux-gnu
+          mv target/aarch64-unknown-linux-gnu/release/ktr target/aarch64-unknown-linux-gnu/release/ktr-aarch64-linux
 
       - name: Upload ARM64 Linux build
         uses: actions/upload-artifact@v3
         with:
-          name: ktr-aarch64-unknown-linux-gnu
-          path: target/aarch64-unknown-linux-gnu/release/ktr-aarch64-unknown-linux-gnu
+          name: ktr-aarch64-linux
+          path: target/aarch64-unknown-linux-gnu/release/ktr-aarch64-linux
 
       - name: Build for 32-bit Linux
         run: |
           cargo build --target=i686-unknown-linux-gnu --release
-          mv target/i686-unknown-linux-gnu/release/ktr target/i686-unknown-linux-gnu/release/ktr-i686-unknown-linux-gnu
+          mv target/i686-unknown-linux-gnu/release/ktr target/i686-unknown-linux-gnu/release/ktr-i686-linux
 
       - name: Upload 32-bit Linux build
         uses: actions/upload-artifact@v3
         with:
-          name: ktr-i686-unknown-linux-gnu
-          path: target/i686-unknown-linux-gnu/release/ktr-i686-unknown-linux-gnu
+          name: ktr-i686-linux
+          path: target/i686-unknown-linux-gnu/release/ktr-i686-linux
 
       - name: Build for 64-bit Linux
         run: |
           cargo build --target=x86_64-unknown-linux-gnu --release
-          mv target/x86_64-unknown-linux-gnu/release/ktr target/x86_64-unknown-linux-gnu/release/ktr-x86_64-unknown-linux-gnu
+          mv target/x86_64-unknown-linux-gnu/release/ktr target/x86_64-unknown-linux-gnu/release/ktr-x86_64-linux
 
       - name: Upload 64-bit Linux build
         uses: actions/upload-artifact@v3
         with:
-          name: ktr-x86_64-unknown-linux-gnu
-          path: target/x86_64-unknown-linux-gnu/release/ktr-x86_64-unknown-linux-gnu
+          name: ktr-x86_64-linux
+          path: target/x86_64-unknown-linux-gnu/release/ktr-x86_64-linux
 
   release-macos:
     runs-on: macos-latest
@@ -84,15 +82,15 @@ jobs:
       - run: mkdir -p releases
       - uses: actions/download-artifact@master
         with:
-          name: ktr-aarch64-unknown-linux-gnu
+          name: ktr-aarch64-linux
           path: releases
       - uses: actions/download-artifact@master
         with:
-          name: ktr-i686-unknown-linux-gnu
+          name: ktr-i686-linux
           path: releases
       - uses: actions/download-artifact@master
         with:
-          name: ktr-x86_64-unknown-linux-gnu
+          name: ktr-x86_64-linux
           path: releases
       - uses: actions/download-artifact@master
         with:
@@ -102,8 +100,13 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           files: |
-            releases/ktr-aarch64-unknown-linux-gnu
-            releases/ktr-i686-unknown-linux-gnu
-            releases/ktr-x86_64-unknown-linux-gnu
+            releases/ktr-aarch64-linux
+            releases/ktr-i686-linux
+            releases/ktr-x86_64-linux
             releases/ktr-x86_64-apple-darwin
           draft: true
+
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.ref }}" releases/ktr-aarch64-linux releases/ktr-i686-linux releases/ktr-x86_64-linux releases/ktr-x86_64-apple-darwin

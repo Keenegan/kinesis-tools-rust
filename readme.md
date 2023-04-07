@@ -27,7 +27,7 @@ You need to provide `AWS_PROFILE` as an environment variable
 ```
 
  ## Download
-Download the latest release for your computer [here](https://github.com/octo-org/octo-repo/releases/latest)
+Download the latest release for your computer [here](https://github.com/Keenegan/kinesis-tools-rust/releases/latest)
 
 ## Build from source
 If you don't already have Rust on your computer go to https://www.rust-lang.org/tools/install to install it
