@@ -1,14 +1,6 @@
 # kinesis-tools-rust
 
-This project allows you to interact with AWS Kinesis stream
-
-
-## Run Locally
-
-```bash
-  git clone https://github.com/Keenegan/kinesis-tools-rust
-  cd kinesis-tools-rust
-```
+This project allows you to interact with [AWS Kinesis stream](https://aws.amazon.com/fr/kinesis/data-streams/)  
 
 ## Usage
 
@@ -29,7 +21,28 @@ Options:
   -h, --help  Print help
 ```
 
-You can override env variable
+You need to provide `AWS_PROFILE` as an environment variable
 ```bash
   AWS_PROFILE=<your profile> cargo run -- list
+```
+
+ ## Download
+Download the latest release for your computer [here](https://github.com/octo-org/octo-repo/releases/latest)
+
+## Build from source
+If you don't already have Rust on your computer go to https://www.rust-lang.org/tools/install to install it
+
+```bash
+git clone https://github.com/Keenegan/kinesis-tools-rust
+cd kinesis-tools-rust
+cargo build --release
+./target/release/ktr help
+```  
+
+## Supported targets
+```
+aarch64-unknown-linux-gnu - ARM64 Linux (kernel 4.1, glibc 2.17+)
+i686-unknown-linux-gnu - 32-bit Linux (kernel 3.2+, glibc 2.17+)
+x86_64-apple-darwin - 64-bit macOS (10.7+, Lion+)
+x86_64-unknown-linux-gnu - 64-bit Linux (kernel 3.2+, glibc 2.17+)
 ```
