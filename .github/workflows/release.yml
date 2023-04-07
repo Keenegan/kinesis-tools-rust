@@ -30,50 +30,6 @@ jobs:
           name: ktr-aarch64-linux
           path: target/aarch64-unknown-linux-gnu/release/ktr-aarch64-linux
 
-      - name: Build for 32-bit Linux
-        run: |
-          cargo build --target=i686-unknown-linux-gnu --release
-          mv target/i686-unknown-linux-gnu/release/ktr target/i686-unknown-linux-gnu/release/ktr-i686-linux
-
-      - name: Upload 32-bit Linux build
-        uses: actions/upload-artifact@v3
-        with:
-          name: ktr-i686-linux
-          path: target/i686-unknown-linux-gnu/release/ktr-i686-linux
-
-      - name: Build for 64-bit Linux
-        run: |
-          cargo build --target=x86_64-unknown-linux-gnu --release
-          mv target/x86_64-unknown-linux-gnu/release/ktr target/x86_64-unknown-linux-gnu/release/ktr-x86_64-linux
-
-      - name: Upload 64-bit Linux build
-        uses: actions/upload-artifact@v3
-        with:
-          name: ktr-x86_64-linux
-          path: target/x86_64-unknown-linux-gnu/release/ktr-x86_64-linux
-
-  release-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-          target: aarch64-apple-darwin
-          default: true
-
-      - name: Build for 64-bit Mac
-        run: |
-          cargo build --target x86_64-apple-darwin --release
-          mv target/x86_64-apple-darwin/release/ktr target/x86_64-apple-darwin/release/ktr-x86_64-apple-darwin
-
-      - name: Upload 64-bit Mac build
-        uses: actions/upload-artifact@v3
-        with:
-          name: ktr-x86_64-apple-darwin
-          path: target/x86_64-apple-darwin/release/ktr-x86_64-apple-darwin
-
   release-all:
     name: Release all artifacts
     runs-on: ubuntu-latest
@@ -84,29 +40,14 @@ jobs:
         with:
           name: ktr-aarch64-linux
           path: releases
-      - uses: actions/download-artifact@master
-        with:
-          name: ktr-i686-linux
-          path: releases
-      - uses: actions/download-artifact@master
-        with:
-          name: ktr-x86_64-linux
-          path: releases
-      - uses: actions/download-artifact@master
-        with:
-          name: ktr-x86_64-apple-darwin
-          path: releases
 
       - uses: softprops/action-gh-release@v1
         with:
           files: |
             releases/ktr-aarch64-linux
-            releases/ktr-i686-linux
-            releases/ktr-x86_64-linux
-            releases/ktr-x86_64-apple-darwin
           draft: true
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.ref }}" releases/ktr-aarch64-linux releases/ktr-i686-linux releases/ktr-x86_64-linux releases/ktr-x86_64-apple-darwin
+        run: gh release upload ${{ github.ref }}" releases/ktr-aarch64-linux
