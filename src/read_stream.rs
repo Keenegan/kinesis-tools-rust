@@ -43,7 +43,7 @@ pub async fn read_stream(client: Arc<Client>, stream: &String) -> Result<(), Err
     println!(
         "========================================================================================"
     );
-    println!("|                 Listening kinesis events from {shard_count} shards                               |");
+    println!("|                 Listening kinesis events from {shard_count} shard(s)                             |");
     println!(
         "========================================================================================"
     );
@@ -93,37 +93,57 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
                 .data()
                 .expect("Error while reading data")
                 .as_ref();
-            let result = unzip_input(data).expect("Error while unzping data");
+            let result =
+                unzip_input(data).expect("Data was received from stream but could not be read.");
             println!("{}", format_result(result));
         }
         sleep(Duration::from_secs(1));
     }
 }
 
-fn unzip_input(input: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+fn unzip_input(input: &[u8]) -> Option<String> {
     let mut buffer = String::new();
-
-    let mut zlib_decoder = ZlibDecoder::new(input);
-    match zlib_decoder.read_to_string(&mut buffer) {
-        Ok(_) => return Ok(buffer),
-        Err(_) => {}
+    match ZlibDecoder::new(input).read_to_string(&mut buffer) {
+        Ok(_) => return Some(buffer),
+        Err(_e) => {
+            // TODO add logging
+        }
     }
 
-    let mut gz_decoder = GzDecoder::new(input);
     buffer.clear();
-    match gz_decoder.read_to_string(&mut buffer) {
-        Ok(_) => return Ok(buffer),
-        Err(_) => {}
+    match GzDecoder::new(input).read_to_string(&mut buffer) {
+        Ok(_) => return Some(buffer),
+        Err(_e) => {
+            // TODO add logging
+        }
     }
 
     buffer.clear();
     match std::io::Cursor::new(input).read_to_string(&mut buffer) {
-        Ok(_) => return Ok(buffer),
-        Err(e) => return Err(Box::new(e)),
+        Ok(_) => return Some(buffer),
+        Err(_e) => {
+            // TODO add logging
+        }
     }
+    None
 }
 
 fn format_result(result: String) -> String {
     let value: Value = serde_json::from_str(&result).unwrap();
     serde_json::to_string_pretty(&value).unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_unzip_input_with_uncompressed_data() {
+        let input = "This is an uncompressed string";
+        let input_bytes = input.as_bytes();
+        let output = unzip_input(input_bytes).unwrap();
+
+        assert_eq!(output, input.clone());
+    }
+    // TODO add other tests
 }
