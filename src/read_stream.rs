@@ -120,6 +120,7 @@ fn unzip_input(input: &[u8]) -> Option<String> {
 
     buffer.clear();
     match std::io::Cursor::new(input).read_to_string(&mut buffer) {
+        // TODO handle base64 encoded plaintext
         Ok(_) => return Some(buffer),
         Err(_e) => {
             // TODO add logging
@@ -129,7 +130,11 @@ fn unzip_input(input: &[u8]) -> Option<String> {
 }
 
 fn format_result(result: String) -> String {
-    let value: Value = serde_json::from_str(&result).unwrap();
+    let mut value: Value = serde_json::from_str(&result).unwrap();
+    // TODO check if there is no cleaner way to do this
+    if !value.is_object() {
+        value = serde_json::from_str(value.as_str().unwrap()).unwrap();
+    }
     serde_json::to_string_pretty(&value).unwrap()
 }
 

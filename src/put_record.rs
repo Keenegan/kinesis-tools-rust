@@ -11,7 +11,7 @@ pub async fn put_record(
 ) -> Result<(), Error> {
     // TODO add param to specify shard key
     let key = "random";
-    let content = std::fs::read_to_string(path).expect("Could not read file");
+    let content = std::fs::read(path).expect("Could not read file");
     if content.is_empty() {
         panic!("File is empty")
     }
