@@ -95,7 +95,7 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
                 .as_ref();
             let result =
                 unzip_input(data).expect("Data was received from stream but could not be read.");
-            println!("{}", format_result(result));
+            println!("{}", json_format(result));
         }
         sleep(Duration::from_secs(1));
     }
@@ -129,13 +129,17 @@ fn unzip_input(input: &[u8]) -> Option<String> {
     None
 }
 
-fn format_result(result: String) -> String {
-    let mut value: Value = serde_json::from_str(&result).unwrap();
-    // TODO check if there is no cleaner way to do this
-    if !value.is_object() {
-        value = serde_json::from_str(value.as_str().unwrap()).unwrap();
+fn json_format(result: String) -> String {
+    match serde_json::from_str::<Value>(&result) {
+        Ok(mut value) => {
+            // TODO check if there is no cleaner way to do this
+            if !value.is_object() {
+                value = serde_json::from_str(value.as_str().unwrap()).unwrap();
+            }
+            serde_json::to_string_pretty(&value).unwrap()
+        }
+        Err(_) => result,
     }
-    serde_json::to_string_pretty(&value).unwrap()
 }
 
 #[cfg(test)]
@@ -146,9 +150,18 @@ mod tests {
     fn test_unzip_input_with_uncompressed_data() {
         let input = "This is an uncompressed string";
         let input_bytes = input.as_bytes();
-        let output = unzip_input(input_bytes).unwrap();
+        let output = json_format(unzip_input(input_bytes).unwrap());
 
         assert_eq!(output, input);
     }
-    // TODO add other tests
+
+    #[test]
+    fn test_unzip_and_format_gzipped_text() {
+        // TODO don't use files for tests
+        let input = std::fs::read("tests/gzipped-text.json").unwrap();
+        let expect = std::fs::read_to_string("tests/text.json").unwrap();
+        let output = json_format(unzip_input(input.as_slice()).unwrap());
+
+        assert_eq!(output, expect);
+    }
 }
