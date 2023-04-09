@@ -148,7 +148,7 @@ mod tests {
         let input_bytes = input.as_bytes();
         let output = unzip_input(input_bytes).unwrap();
 
-        assert_eq!(output, input.clone());
+        assert_eq!(output, input);
     }
     // TODO add other tests
 }

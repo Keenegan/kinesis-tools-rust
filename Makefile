@@ -7,7 +7,7 @@ check:
 	cargo check
 
 fmt:
-	cargo fmt --all
+	cargo fmt
 
 clippy:
 	cargo clippy --all-features -- -D warnings
