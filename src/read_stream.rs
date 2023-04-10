@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use aws_sdk_kinesis::model::{Shard, ShardIteratorType};
 use aws_sdk_kinesis::{Client, Error};
+use base64::{engine::general_purpose, Engine as _};
 use flate2::read::{GzDecoder, ZlibDecoder};
 use serde_json::Value;
 use tokio::sync::mpsc;
@@ -103,6 +104,25 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
 
 fn unzip_input(input: &[u8]) -> Option<String> {
     let mut buffer = String::new();
+    match std::io::Cursor::new(input).read_to_string(&mut buffer) {
+        Ok(_) => {
+            if buffer.ends_with('=') {
+                return match general_purpose::STANDARD.decode(&buffer) {
+                    Ok(bytes) => {
+                        let result = std::str::from_utf8(bytes.as_slice()).unwrap().to_string();
+                        Some(result)
+                    }
+                    Err(_) => Some(buffer),
+                };
+            }
+            return Some(buffer);
+        }
+        Err(_e) => {
+            // TODO add logging
+        }
+    }
+
+    buffer.clear();
     match ZlibDecoder::new(input).read_to_string(&mut buffer) {
         Ok(_) => return Some(buffer),
         Err(_e) => {
@@ -112,15 +132,6 @@ fn unzip_input(input: &[u8]) -> Option<String> {
 
     buffer.clear();
     match GzDecoder::new(input).read_to_string(&mut buffer) {
-        Ok(_) => return Some(buffer),
-        Err(_e) => {
-            // TODO add logging
-        }
-    }
-
-    buffer.clear();
-    match std::io::Cursor::new(input).read_to_string(&mut buffer) {
-        // TODO handle base64 encoded plaintext
         Ok(_) => return Some(buffer),
         Err(_e) => {
             // TODO add logging
@@ -163,5 +174,24 @@ mod tests {
         let output = json_format(unzip_input(input.as_slice()).unwrap());
 
         assert_eq!(output, expect);
+    }
+
+    #[test]
+    fn test_unzip_and_format_base64_encoded_text() {
+        // TODO ici
+        let input = std::fs::read("tests/base64-encoded.json").unwrap();
+        let expect = std::fs::read_to_string("tests/text.json").unwrap();
+        let output = json_format(unzip_input(input.as_slice()).unwrap());
+
+        assert_eq!(output, expect);
+    }
+
+    #[test]
+    fn test_unzip_and_format_text_that_look_base64_encoded() {
+        let input = "This is an uncompressed string that happen to end with an =";
+        let input_bytes = input.as_bytes();
+        let output = json_format(unzip_input(input_bytes).unwrap());
+
+        assert_eq!(output, input);
     }
 }

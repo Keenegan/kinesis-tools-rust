@@ -39,9 +39,8 @@ cargo build --release
 ./target/release/ktr help
 ```  
 
-## Supported targets
+## Currently supported targets
 ```
-aarch64-unknown-linux-gnu - ARM64 Linux (kernel 4.1, glibc 2.17+)
 i686-unknown-linux-gnu - 32-bit Linux (kernel 3.2+, glibc 2.17+)
 x86_64-apple-darwin - 64-bit macOS (10.7+, Lion+)
 x86_64-unknown-linux-gnu - 64-bit Linux (kernel 3.2+, glibc 2.17+)
