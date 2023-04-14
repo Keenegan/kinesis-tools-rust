@@ -61,7 +61,7 @@ enum Commands {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> Result<(), Box<Error>> {
     let args = Args::parse();
     let client = get_client(args.clone()).await;
 
