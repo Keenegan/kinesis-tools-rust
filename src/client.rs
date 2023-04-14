@@ -3,7 +3,7 @@ use std::env;
 use std::error::Error;
 use std::sync::Arc;
 
-use aws_sdk_kinesis::types::SdkError;
+use aws_sdk_kinesis::error::SdkError;
 use aws_sdk_kinesis::Client;
 
 use crate::Args;

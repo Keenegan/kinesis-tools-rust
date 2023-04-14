@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 
-use aws_sdk_kinesis::model::{Shard, ShardIteratorType};
+use aws_sdk_kinesis::types::{Shard, ShardIteratorType};
 use aws_sdk_kinesis::{Client, Error};
 use base64::{engine::general_purpose, Engine as _};
 use flate2::read::{GzDecoder, ZlibDecoder};

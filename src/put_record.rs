@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use aws_sdk_kinesis::types::Blob;
+use aws_sdk_kinesis::primitives::Blob;
 use aws_sdk_kinesis::{Client, Error};
 
 pub async fn put_record(
