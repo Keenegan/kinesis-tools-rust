@@ -18,7 +18,11 @@ mod put_record;
 mod read_stream;
 
 #[derive(Parser, Clone, Debug)]
-#[command(name = "ktr", version, about = "KTR (Kinesis Tools Rust) allows you to interact with AWS Kinesis data streams")]
+#[command(
+    name = "ktr",
+    version,
+    about = "KTR (Kinesis Tools Rust) allows you to interact with AWS Kinesis data streams"
+)]
 pub struct Args {
     /// Which AWS profile to use
     #[clap(required = true, name = "AWS_PROFILE")]
