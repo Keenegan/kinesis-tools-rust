@@ -5,7 +5,7 @@ This project allows you to interact with [AWS Kinesis stream](https://aws.amazon
 ## Usage
 
 ```bash
-KTR (Kinesis Tools Rust) allow to interact with AWS Kinesis data streams
+KTR (Kinesis Tools Rust) allows you to interact with AWS Kinesis data streams
 
 Usage: ktr <AWS_PROFILE> <COMMAND>
 
@@ -18,10 +18,11 @@ Commands:
   help    Print this message or the help of the given subcommand(s)
 
 Arguments:
-  <AWS_PROFILE>  AWS profile
+  <AWS_PROFILE>  Which AWS profile to use
 
 Options:
   -h, --help  Print help
+
 ```
 
  ## Download

@@ -2,7 +2,7 @@
 name = "ktr"
 version = "0.0.4"
 edition = "2021"
-description = "KTR (Kinesis Tools Rust) allow to interact with AWS Kinesis data streams"
+description = "KTR (Kinesis Tools Rust) allows you to interact with AWS Kinesis data streams"
 repository = "https://github.com/Keenegan/kinesis-tools-rust"
 
 [dependencies]
