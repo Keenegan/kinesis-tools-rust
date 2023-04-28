@@ -27,7 +27,7 @@ You need to provide `AWS_PROFILE` as an environment variable
 ```
 
  ## Download
-Download the latest release for your computer [here](https://github.com/Keenegan/kinesis-tools-rust/releases/latest)
+Download the latest [release](https://github.com/Keenegan/kinesis-tools-rust/releases/latest) for your computer
 
 ## Build from source
 If you don't already have Rust on your computer go to https://www.rust-lang.org/tools/install to install it
@@ -39,9 +39,14 @@ cargo build --release
 ./target/release/ktr help
 ```  
 
+## Run from source
+```bash
+AWS_PROFILE=<your_profile> cargo run -- list
+```
+
 ## Currently supported targets
 ```
 i686-unknown-linux-gnu - 32-bit Linux (kernel 3.2+, glibc 2.17+)
-x86_64-apple-darwin - 64-bit macOS (10.7+, Lion+)
 x86_64-unknown-linux-gnu - 64-bit Linux (kernel 3.2+, glibc 2.17+)
+x86_64-apple-darwin - 64-bit macOS (10.7+, Lion+)
 ```

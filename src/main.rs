@@ -34,6 +34,9 @@ enum Commands {
         /// The stream name to read
         #[arg(long, short)]
         stream: String,
+        /// Disable the automatic unzip of received events
+        #[arg(long, short)]
+        disable_unzip: bool,
     },
     /// Create a new stream
     Create {
@@ -66,7 +69,10 @@ async fn main() -> Result<(), Box<Error>> {
     let client = get_client(args.clone()).await;
 
     let _ = match args.command {
-        Commands::Read { stream } => read_stream(client, &stream).await,
+        Commands::Read {
+            stream,
+            disable_unzip,
+        } => read_stream(client, disable_unzip, &stream).await,
         Commands::List {} => list_streams(client).await,
         Commands::Create {
             stream,

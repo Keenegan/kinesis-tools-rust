@@ -7,11 +7,11 @@ description = "KTR (Kinesis Tools Rust) allow to read aws kinesis streams"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aws-config = { default-features = false, version = "0.55.0" }
+aws-config = { default-features = false, features = ["rustls"], version = "0.55.0" }
 aws-sdk-kinesis = { default-features = false, version = "0.25.0" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"], default-features = false }
 dotenv = "0.15.0"
 base64 = { version = "0.21.0", features = ["std"], default-features = false }
 flate2 = "1.0.25"
-clap = { version = "4.1.4", features = ["std", "derive"], default-features = false }
+clap = { version = "4.1.4", features = ["derive"] }
 serde_json = { version = "1.0.95", features = ["preserve_order"], default-features = false }

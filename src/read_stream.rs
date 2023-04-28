@@ -11,7 +11,11 @@ use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio::task;
 
-pub async fn read_stream(client: Arc<Client>, stream: &String) -> Result<(), Error> {
+pub async fn read_stream(
+    client: Arc<Client>,
+    disable_unzip: bool,
+    stream: &String,
+) -> Result<(), Error> {
     let resp = client
         .describe_stream()
         .stream_name(stream)
@@ -34,6 +38,7 @@ pub async fn read_stream(client: Arc<Client>, stream: &String) -> Result<(), Err
     println!("Name:              {}:", desc.stream_name.unwrap());
     println!("ARN:               {}:", desc.stream_arn.unwrap());
     println!("Status:            {:?}", desc.stream_status.unwrap());
+    println!("Automatic unzip:            {:?}", disable_unzip);
     println!("Open shards:       {:?}", shards.len());
     shards
         .iter()
@@ -53,7 +58,7 @@ pub async fn read_stream(client: Arc<Client>, stream: &String) -> Result<(), Err
         let tx_clone = tx.clone();
         let stream_clone = stream.clone();
         task::spawn(async move {
-            listen_to_shard(shard, client_clone, stream_clone).await;
+            listen_to_shard(shard, client_clone, disable_unzip, stream_clone).await;
             tx_clone.send(()).await.unwrap();
         });
     }
@@ -64,7 +69,7 @@ pub async fn read_stream(client: Arc<Client>, stream: &String) -> Result<(), Err
     Ok(())
 }
 
-async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
+async fn listen_to_shard(shard: Shard, client: Arc<Client>, disable_unzip: bool, stream: String) {
     let shard_id = shard.shard_id().unwrap();
     let shard_iter_output = client
         .get_shard_iterator()
@@ -94,18 +99,23 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
                 .data()
                 .expect("Error while reading data")
                 .as_ref();
-            let result =
-                unzip_input(data).expect("Data was received from stream but could not be read.");
+
+            let result = unzip_input(data, disable_unzip)
+                .expect("Data was received from stream but could not be read.");
+
             println!("{}", json_format(result));
         }
         sleep(Duration::from_secs(1));
     }
 }
 
-fn unzip_input(input: &[u8]) -> Option<String> {
+fn unzip_input(input: &[u8], disable_unzip: bool) -> Option<String> {
     let mut buffer = String::new();
     match std::io::Cursor::new(input).read_to_string(&mut buffer) {
         Ok(_) => {
+            if !disable_unzip {
+                return Some(buffer);
+            }
             if buffer.ends_with('=') {
                 return match general_purpose::STANDARD.decode(&buffer) {
                     Ok(bytes) => {
@@ -156,12 +166,13 @@ fn json_format(result: String) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TODO add tests for disable unzip arg
 
     #[test]
     fn test_unzip_input_with_uncompressed_data() {
         let input = "This is an uncompressed string";
         let input_bytes = input.as_bytes();
-        let output = json_format(unzip_input(input_bytes).unwrap());
+        let output = json_format(unzip_input(input_bytes, true).unwrap());
 
         assert_eq!(output, input);
     }
@@ -171,7 +182,7 @@ mod tests {
         // TODO don't use files for tests
         let input = std::fs::read("tests/gzipped-text.json").unwrap();
         let expect = std::fs::read_to_string("tests/text.json").unwrap();
-        let output = json_format(unzip_input(input.as_slice()).unwrap());
+        let output = json_format(unzip_input(input.as_slice(), true).unwrap());
 
         assert_eq!(output, expect);
     }
@@ -181,7 +192,7 @@ mod tests {
         // TODO ici
         let input = std::fs::read("tests/base64-encoded.json").unwrap();
         let expect = std::fs::read_to_string("tests/text.json").unwrap();
-        let output = json_format(unzip_input(input.as_slice()).unwrap());
+        let output = json_format(unzip_input(input.as_slice(), true).unwrap());
 
         assert_eq!(output, expect);
     }
@@ -190,7 +201,7 @@ mod tests {
     fn test_unzip_and_format_text_that_look_base64_encoded() {
         let input = "This is an uncompressed string that happen to end with an =";
         let input_bytes = input.as_bytes();
-        let output = json_format(unzip_input(input_bytes).unwrap());
+        let output = json_format(unzip_input(input_bytes, true).unwrap());
 
         assert_eq!(output, input);
     }
