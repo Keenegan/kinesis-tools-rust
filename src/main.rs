@@ -21,6 +21,9 @@ mod read_stream;
 #[command(name = "ktr")]
 #[command(about = "KTR (Kinesis Tools Rust) allow to interact with AWS Kinesis data streams", long_about = None)]
 pub struct Args {
+    /// AWS profile
+    #[clap(required = true, name = "AWS_PROFILE")]
+    profile: String,
     #[command(subcommand)]
     command: Commands,
 }
@@ -64,7 +67,7 @@ enum Commands {
         /// Determines which shard in the stream the data record is assigned to (Optional)
         #[arg(long, short = 'k')]
         shard_key: Option<String>,
-    }
+    },
 }
 
 #[tokio::main]
@@ -73,6 +76,7 @@ async fn main() -> Result<(), Box<Error>> {
     let client = get_client(args.clone()).await;
 
     let _ = match args.command {
+        //TODO add Describe command
         Commands::Read {
             stream,
             disable_unzip,

@@ -5,25 +5,23 @@ This project allows you to interact with [AWS Kinesis stream](https://aws.amazon
 ## Usage
 
 ```bash
-Kinesis Tools Rust allow to read/write/create a kinesis stream
+KTR (Kinesis Tools Rust) allow to interact with AWS Kinesis data streams
 
-Usage: ktr <COMMAND>
+Usage: ktr <AWS_PROFILE> <COMMAND>
 
 Commands:
-  list    List all streams
-  read    Read upcoming events from a stream
-  create  Create a new stream
-  delete  Delete a stream
-  put     Put record into a stream
+  list    Lists your Kinesis data streams
+  read    Gets data records from a Kinesis data stream
+  create  Creates a Kinesis data stream
+  delete  Deletes a Kinesis data stream and all its shards and data
+  put     Writes a single data record into an Amazon Kinesis data stream
   help    Print this message or the help of the given subcommand(s)
+
+Arguments:
+  <AWS_PROFILE>  AWS profile
 
 Options:
   -h, --help  Print help
-```
-
-You need to provide `AWS_PROFILE` as an environment variable
-```bash
-  AWS_PROFILE=<your profile> cargo run -- list
 ```
 
  ## Download
@@ -41,7 +39,7 @@ cargo build --release
 
 ## Run from source
 ```bash
-AWS_PROFILE=<your_profile> cargo run -- list
+cargo run -- <AWS_PROFILE> list
 ```
 
 ## Currently supported targets
