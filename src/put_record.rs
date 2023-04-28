@@ -8,9 +8,8 @@ pub async fn put_record(
     client: Arc<Client>,
     stream_name: String,
     path: PathBuf,
+    shard_key: Option<String>,
 ) -> Result<(), Error> {
-    // TODO add param to specify shard key
-    let key = "random";
     let content = std::fs::read(path).expect("Could not read file");
     if content.is_empty() {
         panic!("File is empty")
@@ -19,11 +18,13 @@ pub async fn put_record(
     client
         .put_record()
         .data(blob)
-        .partition_key(key)
+        .partition_key(shard_key.unwrap_or("random".to_string()))
         .stream_name(stream_name)
         .send()
         .await
         .expect("Could not push data into stream");
+
+    println!("Data successfully pushed into stream");
 
     Ok(())
 }

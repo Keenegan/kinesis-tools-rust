@@ -151,9 +151,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-kinesis"
-version = "0.25.1"
+version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39fa27c782cba847660cc64c6450112d408100b600606287c330093bed5a3f24"
+checksum = "ddadb4ce2904a035f732a2b0579101baa06c987a21707c740e03d1b05a290b44"
 dependencies = [
  "aws-credential-types",
  "aws-endpoint",
@@ -864,7 +864,7 @@ dependencies = [
 
 [[package]]
 name = "ktr"
-version = "0.1.0"
+version = "0.0.4"
 dependencies = [
  "aws-config",
  "aws-sdk-kinesis",

@@ -19,7 +19,7 @@ mod read_stream;
 
 #[derive(Parser, Clone, Debug)]
 #[command(name = "ktr")]
-#[command(about = "Kinesis Tools Rust allow to read/write/create a kinesis stream", long_about = None)]
+#[command(about = "KTR (Kinesis Tools Rust) allow to interact with AWS Kinesis data streams", long_about = None)]
 pub struct Args {
     #[command(subcommand)]
     command: Commands,
@@ -27,40 +27,44 @@ pub struct Args {
 
 #[derive(Debug, Subcommand, Clone)]
 enum Commands {
-    /// List all streams
+    /// Lists your Kinesis data streams
     List {},
-    /// Read upcoming events from a stream
+    /// Gets data records from a Kinesis data stream
     Read {
-        /// The stream name to read
+        /// The name of the stream to read
         #[arg(long, short)]
         stream: String,
         /// Disable the automatic unzip of received events
         #[arg(long, short)]
         disable_unzip: bool,
     },
-    /// Create a new stream
+    /// Creates a Kinesis data stream
     Create {
-        /// The stream name to create
+        /// The name of the stream to create
         #[arg(long, short)]
         stream: String,
+        /// The number of shards that the stream will use
         #[arg(long)]
         shard_count: Option<i32>,
     },
-    /// Delete a stream
+    /// Deletes a Kinesis data stream and all its shards and data
     Delete {
-        /// The stream name to delete
+        /// The name of the stream to delete
         #[arg(long, short)]
         stream: String,
     },
-    /// Put record into a stream
+    /// Writes a single data record into an Amazon Kinesis data stream
     Put {
-        /// The stream where data will be sent
+        /// The name of the stream to put the data record into
         #[arg(long, short)]
         stream: String,
-        /// The path to a file containing a json payload
+        /// The path to a file containing the data record
         #[arg(long, short)]
         path: std::path::PathBuf,
-    },
+        /// Determines which shard in the stream the data record is assigned to (Optional)
+        #[arg(long, short = 'k')]
+        shard_key: Option<String>,
+    }
 }
 
 #[tokio::main]
@@ -79,7 +83,11 @@ async fn main() -> Result<(), Box<Error>> {
             shard_count,
         } => create_stream(client, stream, shard_count).await,
         Commands::Delete { stream } => delete_stream(client, stream).await,
-        Commands::Put { stream, path } => put_record(client, stream, path).await,
+        Commands::Put {
+            stream,
+            path,
+            shard_key,
+        } => put_record(client, stream, path, shard_key).await,
     };
     Ok(())
 }
