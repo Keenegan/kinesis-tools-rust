@@ -5,29 +5,30 @@ This project allows you to interact with [AWS Kinesis stream](https://aws.amazon
 ## Usage
 
 ```bash
-Kinesis Tools Rust allow to read/write/create a kinesis stream
+KTR (Kinesis Tools Rust) allows you to interact with AWS Kinesis data streams
 
-Usage: ktr <COMMAND>
+Usage: ktr <AWS_PROFILE> <COMMAND>
 
 Commands:
-  list    List all streams
-  read    Read upcoming events from a stream
-  create  Create a new stream
-  delete  Delete a stream
-  put     Put record into a stream
+  list    Lists your Kinesis data streams
+  read    Gets data records from a Kinesis data stream
+  create  Creates a Kinesis data stream
+  delete  Deletes a Kinesis data stream and all its shards and data
+  put     Writes a single data record into an Amazon Kinesis data stream
   help    Print this message or the help of the given subcommand(s)
 
-Options:
-  -h, --help  Print help
-```
+Arguments:
+  <AWS_PROFILE>  Which AWS profile to use
 
-You need to provide `AWS_PROFILE` as an environment variable
-```bash
-  AWS_PROFILE=<your profile> cargo run -- list
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
  ## Download
-Download the latest release for your computer [here](https://github.com/Keenegan/kinesis-tools-rust/releases/latest)
+Download the latest [release](https://github.com/Keenegan/kinesis-tools-rust/releases/latest) for your computer
+Make the downloaded binary executable
+Then you should be able to run `./ktr` to see help message
 
 ## Build from source
 If you don't already have Rust on your computer go to https://www.rust-lang.org/tools/install to install it
@@ -39,9 +40,14 @@ cargo build --release
 ./target/release/ktr help
 ```  
 
+## Run from source
+```bash
+cargo run -- <AWS_PROFILE> list
+```
+
 ## Currently supported targets
 ```
 i686-unknown-linux-gnu - 32-bit Linux (kernel 3.2+, glibc 2.17+)
-x86_64-apple-darwin - 64-bit macOS (10.7+, Lion+)
 x86_64-unknown-linux-gnu - 64-bit Linux (kernel 3.2+, glibc 2.17+)
+x86_64-apple-darwin - 64-bit macOS (10.7+, Lion+)
 ```
