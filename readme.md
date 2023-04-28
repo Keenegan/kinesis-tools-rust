@@ -21,12 +21,12 @@ Arguments:
   <AWS_PROFILE>  Which AWS profile to use
 
 Options:
-  -h, --help  Print help
-
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
  ## Download
-Download the latest [release](https://github.com/Keenegan/kinesis-tools-rust/releases/latest) for your computer
+Download the latest [release](https://github.com/Keenegan/kinesis-tools-rust/releases/latest) for your computer, then make the binary file executable 
 
 ## Build from source
 If you don't already have Rust on your computer go to https://www.rust-lang.org/tools/install to install it
