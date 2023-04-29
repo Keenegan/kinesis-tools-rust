@@ -26,9 +26,7 @@ Options:
 ```
 
  ## Download
-Download the latest [release](https://github.com/Keenegan/kinesis-tools-rust/releases/latest) for your computer
-Make the downloaded binary executable
-Then you should be able to run `./ktr` to see help message
+Download the latest [release](https://github.com/Keenegan/kinesis-tools-rust/releases/latest) for your computer, make the downloaded binary executable, then you should be able to run `./ktr` to see help message
 
 ## Build from source
 If you don't already have Rust on your computer go to https://www.rust-lang.org/tools/install to install it

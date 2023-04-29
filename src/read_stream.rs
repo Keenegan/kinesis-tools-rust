@@ -38,7 +38,7 @@ pub async fn read_stream(
     println!("Name:              {}:", desc.stream_name.unwrap());
     println!("ARN:               {}:", desc.stream_arn.unwrap());
     println!("Status:            {:?}", desc.stream_status.unwrap());
-    println!("Automatic unzip:            {:?}", disable_unzip);
+    println!("Unzip event:            {:?}", !disable_unzip);
     println!("Open shards:       {:?}", shards.len());
     shards
         .iter()
@@ -113,7 +113,7 @@ fn unzip_input(input: &[u8], disable_unzip: bool) -> Option<String> {
     let mut buffer = String::new();
     match std::io::Cursor::new(input).read_to_string(&mut buffer) {
         Ok(_) => {
-            if !disable_unzip {
+            if disable_unzip {
                 return Some(buffer);
             }
             if buffer.ends_with('=') {
@@ -134,7 +134,13 @@ fn unzip_input(input: &[u8], disable_unzip: bool) -> Option<String> {
 
     buffer.clear();
     match ZlibDecoder::new(input).read_to_string(&mut buffer) {
-        Ok(_) => return Some(buffer),
+        Ok(_) => {
+            println!("Zlib compressed data received");
+            if disable_unzip {
+                return None;
+            }
+            return Some(buffer);
+        }
         Err(_e) => {
             // TODO add logging
         }
@@ -142,7 +148,13 @@ fn unzip_input(input: &[u8], disable_unzip: bool) -> Option<String> {
 
     buffer.clear();
     match GzDecoder::new(input).read_to_string(&mut buffer) {
-        Ok(_) => return Some(buffer),
+        Ok(_) => {
+            println!("Gzip data was received");
+            if disable_unzip {
+                return None;
+            }
+            return Some(buffer);
+        }
         Err(_e) => {
             // TODO add logging
         }
@@ -172,7 +184,7 @@ mod tests {
     fn test_unzip_input_with_uncompressed_data() {
         let input = "This is an uncompressed string";
         let input_bytes = input.as_bytes();
-        let output = json_format(unzip_input(input_bytes, true).unwrap());
+        let output = json_format(unzip_input(input_bytes, false).unwrap());
 
         assert_eq!(output, input);
     }
@@ -182,7 +194,7 @@ mod tests {
         // TODO don't use files for tests
         let input = std::fs::read("tests/gzipped-text.json").unwrap();
         let expect = std::fs::read_to_string("tests/text.json").unwrap();
-        let output = json_format(unzip_input(input.as_slice(), true).unwrap());
+        let output = json_format(unzip_input(input.as_slice(), false).unwrap());
 
         assert_eq!(output, expect);
     }
@@ -192,7 +204,7 @@ mod tests {
         // TODO ici
         let input = std::fs::read("tests/base64-encoded.json").unwrap();
         let expect = std::fs::read_to_string("tests/text.json").unwrap();
-        let output = json_format(unzip_input(input.as_slice(), true).unwrap());
+        let output = json_format(unzip_input(input.as_slice(), false).unwrap());
 
         assert_eq!(output, expect);
     }
@@ -201,7 +213,7 @@ mod tests {
     fn test_unzip_and_format_text_that_look_base64_encoded() {
         let input = "This is an uncompressed string that happen to end with an =";
         let input_bytes = input.as_bytes();
-        let output = json_format(unzip_input(input_bytes, true).unwrap());
+        let output = json_format(unzip_input(input_bytes, false).unwrap());
 
         assert_eq!(output, input);
     }
