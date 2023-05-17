@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::io::prelude::*;
 use std::sync::Arc;
 use std::thread::sleep;
@@ -69,7 +70,7 @@ pub async fn read_stream(
     Ok(())
 }
 
-async fn listen_to_shard(shard: Shard, client: Arc<Client>, disable_unzip: bool, stream: String) {
+async fn listen_to_shard(shard: Shard, client: Arc<Client>, _disable_unzip: bool, stream: String) {
     let shard_id = shard.shard_id().unwrap();
     let shard_iter_output = client
         .get_shard_iterator()
@@ -100,121 +101,156 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, disable_unzip: bool,
                 .expect("Error while reading data")
                 .as_ref();
 
-            let result = unzip_input(data, disable_unzip)
-                .expect("Data was received from stream but could not be read.");
+            let result = record_to_string(data).unwrap();
 
-            println!("{}", json_format(result));
+            println!("{}", result);
         }
         sleep(Duration::from_secs(1));
     }
 }
 
-fn unzip_input(input: &[u8], disable_unzip: bool) -> Option<String> {
-    let mut buffer = String::new();
-    match std::io::Cursor::new(input).read_to_string(&mut buffer) {
-        Ok(_) => {
-            if disable_unzip {
-                return Some(buffer);
-            }
-            if buffer.ends_with('=') {
-                return match general_purpose::STANDARD.decode(&buffer) {
-                    Ok(bytes) => {
-                        let result = std::str::from_utf8(bytes.as_slice()).unwrap().to_string();
-                        Some(result)
-                    }
-                    Err(_) => Some(buffer),
-                };
-            }
-            return Some(buffer);
-        }
-        Err(_e) => {
-            // TODO add logging
-        }
-    }
-
-    buffer.clear();
-    match ZlibDecoder::new(input).read_to_string(&mut buffer) {
-        Ok(_) => {
-            println!("Zlib compressed data received");
-            if disable_unzip {
-                return None;
-            }
-            return Some(buffer);
-        }
-        Err(_e) => {
-            // TODO add logging
-        }
-    }
-
-    buffer.clear();
-    match GzDecoder::new(input).read_to_string(&mut buffer) {
-        Ok(_) => {
-            println!("Gzip data was received");
-            if disable_unzip {
-                return None;
-            }
-            return Some(buffer);
-        }
-        Err(_e) => {
-            // TODO add logging
-        }
-    }
-    None
+#[derive(Debug)]
+pub enum FormatRecordError {
+    Default,
 }
 
-fn json_format(result: String) -> String {
-    match serde_json::from_str::<Value>(&result) {
+impl Display for FormatRecordError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FormatRecordError::Default => write!(f, "Default error"),
+        }
+    }
+}
+
+fn record_to_string(record: &[u8]) -> Result<String, FormatRecordError> {
+    let mut buffer = String::new();
+
+    if std::io::Cursor::new(record)
+        .read_to_string(&mut buffer)
+        .is_ok()
+    {
+        return match general_purpose::STANDARD.decode(&buffer) {
+            Ok(value) => Ok(format_record(
+                std::str::from_utf8(value.as_slice()).unwrap().to_string(),
+            )),
+            Err(_) => Ok(format_record(buffer)),
+        };
+    }
+    buffer.clear();
+
+    if ZlibDecoder::new(record).read_to_string(&mut buffer).is_ok() {
+        return Ok(format_record(buffer));
+    }
+    buffer.clear();
+
+    if GzDecoder::new(record).read_to_string(&mut buffer).is_ok() {
+        return Ok(format_record(buffer));
+    }
+    buffer.clear();
+
+    Err(FormatRecordError::Default)
+}
+
+fn format_record(record: String) -> String {
+    let result;
+    match serde_json::from_str::<Value>(&record) {
         Ok(mut value) => {
-            // TODO check if there is no cleaner way to do this
             if !value.is_object() {
                 value = serde_json::from_str(value.as_str().unwrap()).unwrap();
             }
-            serde_json::to_string_pretty(&value).unwrap()
+            result = serde_json::to_string_pretty(&value).unwrap();
         }
-        Err(_) => result,
+        Err(_) => result = record,
     }
+    result.trim().to_string()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    // TODO add tests for disable unzip arg
+    use flate2::read::{GzEncoder, ZlibEncoder};
+    use flate2::Compression;
+    use std::fs;
+    use std::fs::File;
 
     #[test]
-    fn test_unzip_input_with_uncompressed_data() {
-        let input = "This is an uncompressed string";
-        let input_bytes = input.as_bytes();
-        let output = json_format(unzip_input(input_bytes, false).unwrap());
+    fn test_record_to_string_with_json_input() {
+        let expected = fs::read_to_string("tests/valid-payload")
+            .unwrap()
+            .trim()
+            .to_string();
 
-        assert_eq!(output, input);
+        let result = record_to_string(
+            fs::read_to_string("tests/valid-payload")
+                .unwrap()
+                .as_bytes(),
+        )
+        .unwrap();
+        assert_eq!(result, expected);
+
+        let result = record_to_string(
+            fs::read_to_string("tests/inline-payload")
+                .unwrap()
+                .as_bytes(),
+        )
+        .unwrap();
+        assert_eq!(result, expected);
+
+        let base64_encoded_input =
+            general_purpose::STANDARD.encode(fs::read_to_string("tests/valid-payload").unwrap());
+        let result = record_to_string(base64_encoded_input.as_bytes()).unwrap();
+        assert_eq!(result, expected);
     }
 
     #[test]
-    fn test_unzip_and_format_gzipped_text() {
-        // TODO don't use files for tests
-        let input = std::fs::read("tests/gzipped-text.json").unwrap();
-        let expect = std::fs::read_to_string("tests/text.json").unwrap();
-        let output = json_format(unzip_input(input.as_slice(), false).unwrap());
+    fn test_record_to_string_with_zlib_encoded_json_input() {
+        let expected = fs::read_to_string("tests/valid-payload")
+            .unwrap()
+            .trim()
+            .to_string();
 
-        assert_eq!(output, expect);
+        let mut zlib_encoder = ZlibEncoder::new(
+            File::open("tests/valid-payload").unwrap(),
+            Compression::fast(),
+        );
+        let mut buffer = Vec::new();
+        zlib_encoder.read_to_end(&mut buffer).unwrap();
+        let result = record_to_string(buffer.as_slice()).unwrap();
+        assert_eq!(result, expected);
+
+        let mut zlib_encoder = ZlibEncoder::new(
+            File::open("tests/inline-payload").unwrap(),
+            Compression::fast(),
+        );
+        buffer.clear();
+        zlib_encoder.read_to_end(&mut buffer).unwrap();
+        let result = record_to_string(buffer.as_slice()).unwrap();
+        assert_eq!(result, expected);
     }
 
     #[test]
-    fn test_unzip_and_format_base64_encoded_text() {
-        // TODO ici
-        let input = std::fs::read("tests/base64-encoded.json").unwrap();
-        let expect = std::fs::read_to_string("tests/text.json").unwrap();
-        let output = json_format(unzip_input(input.as_slice(), false).unwrap());
+    fn test_record_to_string_with_gz_encoded_json_input() {
+        let expected = fs::read_to_string("tests/valid-payload")
+            .unwrap()
+            .trim()
+            .to_string();
 
-        assert_eq!(output, expect);
-    }
+        let mut zlib_encoder = GzEncoder::new(
+            File::open("tests/valid-payload").unwrap(),
+            Compression::fast(),
+        );
+        let mut buffer = Vec::new();
+        zlib_encoder.read_to_end(&mut buffer).unwrap();
+        let result = record_to_string(buffer.as_slice()).unwrap();
+        assert_eq!(result, expected);
 
-    #[test]
-    fn test_unzip_and_format_text_that_look_base64_encoded() {
-        let input = "This is an uncompressed string that happen to end with an =";
-        let input_bytes = input.as_bytes();
-        let output = json_format(unzip_input(input_bytes, false).unwrap());
-
-        assert_eq!(output, input);
+        let mut zlib_encoder = GzEncoder::new(
+            File::open("tests/inline-payload").unwrap(),
+            Compression::fast(),
+        );
+        buffer.clear();
+        zlib_encoder.read_to_end(&mut buffer).unwrap();
+        let result = record_to_string(buffer.as_slice()).unwrap();
+        assert_eq!(result, expected);
     }
 }
