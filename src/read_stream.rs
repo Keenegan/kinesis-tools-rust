@@ -94,35 +94,37 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, _disable_unzip: bool
         shard_iter = get_records.next_shard_iterator();
         records = get_records.records().unwrap();
         if !records.is_empty() {
-            let data = records
-                .first()
-                .unwrap()
-                .data()
-                .expect("Error while reading data")
-                .as_ref();
-
-            let result = record_to_string(data).unwrap();
-
-            println!("{}", result);
+            for record in records {
+                let data = record.data().expect("Error while reading data").as_ref();
+                match record_to_string(data) {
+                    Ok(result) => println!("{}", result),
+                    Err(error) => eprintln!("{}", error),
+                };
+            }
         }
         sleep(Duration::from_secs(1));
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum FormatRecordError {
     Default,
+    EmptyRecord,
 }
 
 impl Display for FormatRecordError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FormatRecordError::Default => write!(f, "Default error"),
+            FormatRecordError::EmptyRecord => write!(f, "Empty record received"),
         }
     }
 }
 
 fn record_to_string(record: &[u8]) -> Result<String, FormatRecordError> {
+    if record.is_empty() {
+        return Err(FormatRecordError::EmptyRecord);
+    }
     let mut buffer = String::new();
 
     if std::io::Cursor::new(record)
@@ -174,7 +176,7 @@ mod tests {
     use std::fs::File;
 
     #[test]
-    fn test_record_to_string_with_json_input() {
+    fn test_record_to_string_success_with_json_input() {
         let expected = fs::read_to_string("tests/valid-payload")
             .unwrap()
             .trim()
@@ -203,7 +205,7 @@ mod tests {
     }
 
     #[test]
-    fn test_record_to_string_with_zlib_encoded_json_input() {
+    fn test_record_to_string_success_with_zlib_encoded_json_input() {
         let expected = fs::read_to_string("tests/valid-payload")
             .unwrap()
             .trim()
@@ -229,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn test_record_to_string_with_gz_encoded_json_input() {
+    fn test_record_to_string_success_with_gz_encoded_json_input() {
         let expected = fs::read_to_string("tests/valid-payload")
             .unwrap()
             .trim()
@@ -252,5 +254,11 @@ mod tests {
         zlib_encoder.read_to_end(&mut buffer).unwrap();
         let result = record_to_string(buffer.as_slice()).unwrap();
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_record_to_string_error_with_empty_input() {
+        let result = record_to_string("".to_string().as_bytes()).err().unwrap();
+        assert_eq!(result, FormatRecordError::EmptyRecord);
     }
 }
