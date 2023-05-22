@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 
-use aws_sdk_kinesis::types::{Shard, ShardIteratorType};
+use aws_sdk_kinesis::types::{Shard, ShardIteratorType, StreamDescription};
 use aws_sdk_kinesis::{Client, Error};
 use base64::{engine::general_purpose, Engine as _};
 use flate2::read::{GzDecoder, ZlibDecoder};
@@ -17,43 +17,19 @@ pub async fn read_stream(
     disable_unzip: bool,
     stream: &String,
 ) -> Result<(), Error> {
-    let resp = client
+    let describe = client
         .describe_stream()
         .stream_name(stream)
         .send()
         .await
         .expect("No stream found");
-    let desc = resp.stream_description.unwrap();
-    let shards = desc.shards.unwrap();
+    let stream_description = describe.stream_description.unwrap();
+    let shards = stream_description.shards.clone().unwrap();
     let shard_count = shards.len();
+    print_stream_header(&stream_description, client.clone());
 
-    println!(
-        "========================================================================================"
-    );
-    println!(
-        "|                                    Stream description                                |"
-    );
-    println!(
-        "========================================================================================"
-    );
-    println!("Name:              {}:", desc.stream_name.unwrap());
-    println!("ARN:               {}:", desc.stream_arn.unwrap());
-    println!("Status:            {:?}", desc.stream_status.unwrap());
-    println!("Unzip event:            {:?}", !disable_unzip);
-    println!("Open shards:       {:?}", shards.len());
-    shards
-        .iter()
-        .for_each(|shard| println!("    {}", shard.shard_id().unwrap()));
-    println!("Encryption:        {:?}", desc.encryption_type.unwrap());
     let (tx, mut rx) = mpsc::channel(shards.len());
 
-    println!(
-        "========================================================================================"
-    );
-    println!("|                 Listening kinesis events from {shard_count} shard(s)                             |");
-    println!(
-        "========================================================================================"
-    );
     for shard in shards {
         let client_clone = client.clone();
         let tx_clone = tx.clone();
@@ -68,6 +44,29 @@ pub async fn read_stream(
         rx.recv().await.unwrap();
     }
     Ok(())
+}
+
+fn print_stream_header(stream_description: &StreamDescription, client: Arc<Client>) {
+    let stream_name = stream_description.stream_name().unwrap();
+    println!("Reading Kinesis stream '{}'", stream_name);
+    println!();
+    println!("Stream information for '{}'", stream_name);
+    println!("- Name: {}:", stream_name);
+    println!("- ARN: {}:", stream_description.stream_arn.clone().unwrap());
+    println!("- Region: {}", client.conf().region().unwrap());
+    println!(
+        "- Status: {:?}",
+        stream_description.stream_status.clone().unwrap()
+    );
+    println!(
+        "- Number of Shards: {:?}",
+        stream_description.shards.clone().unwrap().len()
+    );
+    println!(
+        "- Encryption: {:?}",
+        stream_description.encryption_type.clone().unwrap()
+    );
+    println!();
 }
 
 async fn listen_to_shard(shard: Shard, client: Arc<Client>, _disable_unzip: bool, stream: String) {
@@ -97,7 +96,19 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, _disable_unzip: bool
             for record in records {
                 let data = record.data().expect("Error while reading data").as_ref();
                 match record_to_string(data) {
-                    Ok(result) => println!("{}", result),
+                    Ok(result) => {
+                        println!("------------------------------------------------------------");
+                        println!("Event received from shard '{}':", &shard_id);
+                        println!("Partition Key '{}':", record.partition_key().unwrap());
+                        println!("Sequence '{}':", record.sequence_number().unwrap());
+                        println!(
+                            "Received at '{:?}':",
+                            record.approximate_arrival_timestamp().unwrap()
+                        );
+                        println!("{}", result);
+                        println!("------------------------------------------------------------");
+                        println!();
+                    }
                     Err(error) => eprintln!("{}", error),
                 };
             }
