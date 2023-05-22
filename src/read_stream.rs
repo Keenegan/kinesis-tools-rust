@@ -175,12 +175,13 @@ mod tests {
     use std::fs;
     use std::fs::File;
 
+    fn get_test_input(path: &str) -> String {
+        fs::read_to_string(path).unwrap().trim().to_string()
+    }
+
     #[test]
     fn test_record_to_string_success_with_json_input() {
-        let expected = fs::read_to_string("tests/valid-payload")
-            .unwrap()
-            .trim()
-            .to_string();
+        let expected = get_test_input("tests/valid-payload");
 
         let result = record_to_string(
             fs::read_to_string("tests/valid-payload")
@@ -206,10 +207,7 @@ mod tests {
 
     #[test]
     fn test_record_to_string_success_with_zlib_encoded_json_input() {
-        let expected = fs::read_to_string("tests/valid-payload")
-            .unwrap()
-            .trim()
-            .to_string();
+        let expected = get_test_input("tests/valid-payload");
 
         let mut zlib_encoder = ZlibEncoder::new(
             File::open("tests/valid-payload").unwrap(),
@@ -232,10 +230,7 @@ mod tests {
 
     #[test]
     fn test_record_to_string_success_with_gz_encoded_json_input() {
-        let expected = fs::read_to_string("tests/valid-payload")
-            .unwrap()
-            .trim()
-            .to_string();
+        let expected = get_test_input("tests/valid-payload");
 
         let mut zlib_encoder = GzEncoder::new(
             File::open("tests/valid-payload").unwrap(),
