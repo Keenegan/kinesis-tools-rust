@@ -7,16 +7,13 @@ use std::time::Duration;
 use aws_sdk_kinesis::types::{Shard, ShardIteratorType, StreamDescription};
 use aws_sdk_kinesis::{Client, Error};
 use base64::{engine::general_purpose, Engine as _};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use flate2::read::{GzDecoder, ZlibDecoder};
 use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio::task;
 
-pub async fn read_stream(
-    client: Arc<Client>,
-    disable_unzip: bool,
-    stream: &String,
-) -> Result<(), Error> {
+pub async fn read_stream(client: Arc<Client>, stream: &String) -> Result<(), Error> {
     let describe = client
         .describe_stream()
         .stream_name(stream)
@@ -35,7 +32,7 @@ pub async fn read_stream(
         let tx_clone = tx.clone();
         let stream_clone = stream.clone();
         task::spawn(async move {
-            listen_to_shard(shard, client_clone, disable_unzip, stream_clone).await;
+            listen_to_shard(shard, client_clone, stream_clone).await;
             tx_clone.send(()).await.unwrap();
         });
     }
@@ -48,9 +45,9 @@ pub async fn read_stream(
 
 fn print_stream_header(stream_description: &StreamDescription, client: Arc<Client>) {
     let stream_name = stream_description.stream_name().unwrap();
-    println!("Reading Kinesis stream '{}'", stream_name);
-    println!();
+    println!("------------------------------------------------------------");
     println!("Stream information for '{}'", stream_name);
+    println!("------------------------------------------------------------");
     println!("- Name: {}:", stream_name);
     println!("- ARN: {}:", stream_description.stream_arn.clone().unwrap());
     println!("- Region: {}", client.conf().region().unwrap());
@@ -66,10 +63,11 @@ fn print_stream_header(stream_description: &StreamDescription, client: Arc<Clien
         "- Encryption: {:?}",
         stream_description.encryption_type.clone().unwrap()
     );
-    println!();
+    println!("------------------------------------------------------------");
+    println!("Reading Kinesis data stream '{}'", stream_name);
 }
 
-async fn listen_to_shard(shard: Shard, client: Arc<Client>, _disable_unzip: bool, stream: String) {
+async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
     let shard_id = shard.shard_id().unwrap();
     let shard_iter_output = client
         .get_shard_iterator()
@@ -95,16 +93,22 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, _disable_unzip: bool
         if !records.is_empty() {
             for record in records {
                 let data = record.data().expect("Error while reading data").as_ref();
+
+                let timestamp = record
+                    .approximate_arrival_timestamp()
+                    .unwrap()
+                    .as_secs_f64()
+                    .round() as i64;
+                let naive = NaiveDateTime::from_timestamp_opt(timestamp, 0);
+                let datetime: DateTime<Utc> = DateTime::from_utc(naive.unwrap(), Utc);
+
                 match record_to_string(data) {
                     Ok(result) => {
                         println!("------------------------------------------------------------");
-                        println!("Event received from shard '{}':", &shard_id);
-                        println!("Partition Key '{}':", record.partition_key().unwrap());
-                        println!("Sequence '{}':", record.sequence_number().unwrap());
-                        println!(
-                            "Received at '{:?}':",
-                            record.approximate_arrival_timestamp().unwrap()
-                        );
+                        println!("Event received from shard '{}'", &shard_id);
+                        println!("Partition Key '{}'", record.partition_key().unwrap());
+                        println!("Sequence '{}'", record.sequence_number().unwrap());
+                        println!("Received at '{}'", datetime.format("%Y-%m-%d %H:%M:%S"));
                         println!("{}", result);
                         println!("------------------------------------------------------------");
                         println!();

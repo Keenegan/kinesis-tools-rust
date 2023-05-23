@@ -40,9 +40,6 @@ enum Commands {
         /// The name of the stream to read
         #[arg(long, short)]
         stream: String,
-        /// Disable the automatic unzip of received events
-        #[arg(long, short)]
-        disable_unzip: bool,
     },
     /// Creates a Kinesis data stream
     Create {
@@ -80,10 +77,7 @@ async fn main() -> Result<(), Box<Error>> {
 
     let _ = match args.command {
         //TODO add Describe command
-        Commands::Read {
-            stream,
-            disable_unzip,
-        } => read_stream(client, disable_unzip, &stream).await,
+        Commands::Read { stream } => read_stream(client, &stream).await,
         Commands::List {} => list_streams(client).await,
         Commands::Create {
             stream,
