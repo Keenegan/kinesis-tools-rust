@@ -124,7 +124,7 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
                     }
                 }
             }
-            Err(err) => eprintln!("{}", err),
+            Err(err) => eprintln!("{}", err.into_source().unwrap()),
         }
         sleep(Duration::from_secs(1));
     }
