@@ -24,7 +24,7 @@ mod read_stream;
     about = "KTR (Kinesis Tools Rust) allows you to interact with AWS Kinesis data streams"
 )]
 pub struct Args {
-    /// Which AWS profile to use (overrides env variable)
+    /// Which AWS profile to use. If not provided, KTR will search for an env variable with the same name
     #[clap(name = "AWS_PROFILE")]
     profile: Option<String>,
     #[command(subcommand)]

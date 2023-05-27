@@ -7,7 +7,7 @@ This project allows you to interact with [AWS Kinesis stream](https://aws.amazon
 ```bash
 KTR (Kinesis Tools Rust) allows you to interact with AWS Kinesis data streams
 
-Usage: ktr <AWS_PROFILE> <COMMAND>
+Usage: ktr [AWS_PROFILE] <COMMAND>
 
 Commands:
   list    Lists your Kinesis data streams
@@ -18,11 +18,12 @@ Commands:
   help    Print this message or the help of the given subcommand(s)
 
 Arguments:
-  <AWS_PROFILE>  Which AWS profile to use
+  [AWS_PROFILE]  Which AWS profile to use. If not provided, KTR will search for an env variable with the same name
 
 Options:
   -h, --help     Print help
   -V, --version  Print version
+
 ```
 
  ## Download
@@ -35,12 +36,12 @@ If you don't already have Rust on your computer go to https://www.rust-lang.org/
 git clone https://github.com/Keenegan/kinesis-tools-rust
 cd kinesis-tools-rust
 cargo build --release
-./target/release/ktr help
+./target/release/ktr
 ```  
 
 ## Run from source
 ```bash
-cargo run -- <AWS_PROFILE> list
+cargo run -- list
 ```
 
 ## Currently supported targets
