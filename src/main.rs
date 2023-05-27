@@ -24,9 +24,9 @@ mod read_stream;
     about = "KTR (Kinesis Tools Rust) allows you to interact with AWS Kinesis data streams"
 )]
 pub struct Args {
-    /// Which AWS profile to use
-    #[clap(required = true, name = "AWS_PROFILE")]
-    profile: String,
+    /// Which AWS profile to use. If not provided, KTR will search for an env variable with the same name
+    #[clap(name = "AWS_PROFILE")]
+    profile: Option<String>,
     #[command(subcommand)]
     command: Commands,
 }
@@ -40,9 +40,6 @@ enum Commands {
         /// The name of the stream to read
         #[arg(long, short)]
         stream: String,
-        /// Disable the automatic unzip of received events
-        #[arg(long, short)]
-        disable_unzip: bool,
     },
     /// Creates a Kinesis data stream
     Create {
@@ -80,10 +77,7 @@ async fn main() -> Result<(), Box<Error>> {
 
     let _ = match args.command {
         //TODO add Describe command
-        Commands::Read {
-            stream,
-            disable_unzip,
-        } => read_stream(client, disable_unzip, &stream).await,
+        Commands::Read { stream } => read_stream(client, &stream).await,
         Commands::List {} => list_streams(client).await,
         Commands::Create {
             stream,
