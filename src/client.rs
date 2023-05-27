@@ -47,44 +47,42 @@ mod tests {
     use crate::Commands;
 
     #[test]
-    fn test_get_aws_profile_from_args_only() {
+    fn test_get_aws_profile_from_args_or_env() {
+        // Profile from args only
+        env::remove_var("AWS_PROFILE");
         let args = Args {
-            profile: Some("profile".to_string()),
+            profile: Some("args-profile".to_string()),
             command: Commands::List {},
         };
-        assert_eq!(get_aws_profile(args), "profile".to_string());
-    }
+        assert_eq!(get_aws_profile(args), "args-profile".to_string());
 
-    #[test]
-    fn test_get_aws_profile_from_env_only() {
+        // Profile from env only
+        env::set_var("AWS_PROFILE", "env-profile");
         let args = Args {
             profile: None,
             command: Commands::List {},
         };
-        env::set_var("AWS_PROFILE", "profile");
-        assert_eq!(get_aws_profile(args), "profile".to_string());
+        assert_eq!(get_aws_profile(args), "env-profile".to_string());
+
+        // Profile from both args and env
+        env::set_var("AWS_PROFILE", "env-profile");
+        let args = Args {
+            profile: Some("args-profile".to_string()),
+            command: Commands::List {},
+        };
+        assert_eq!(get_aws_profile(args), "args-profile".to_string());
         env::remove_var("AWS_PROFILE");
     }
 
     #[should_panic]
     #[test]
     fn test_get_aws_profile_with_no_profile() {
+        env::remove_var("AWS_PROFILE");
+
         let args = Args {
             profile: None,
             command: Commands::List {},
         };
-        env::remove_var("AWS_PROFILE");
         get_aws_profile(args);
-    }
-
-    #[test]
-    fn test_get_aws_profile_with_args_and_env_variable() {
-        let args = Args {
-            profile: Some("profile from args".to_string()),
-            command: Commands::List {},
-        };
-        env::set_var("AWS_PROFILE", "profile from env");
-        assert_eq!(get_aws_profile(args), "profile from args".to_string());
-        env::remove_var("AWS_PROFILE");
     }
 }

@@ -82,40 +82,49 @@ async fn listen_to_shard(shard: Shard, client: Arc<Client>, stream: String) {
     let mut records;
 
     loop {
-        get_records = client
+        match client
             .get_records()
             .shard_iterator(shard_iter.unwrap())
             .send()
             .await
-            .unwrap();
-        shard_iter = get_records.next_shard_iterator();
-        records = get_records.records().unwrap();
-        if !records.is_empty() {
-            for record in records {
-                let data = record.data().expect("Error while reading data").as_ref();
+        {
+            Ok(record_output) => {
+                get_records = record_output;
+                shard_iter = get_records.next_shard_iterator();
+                records = get_records.records().unwrap();
+                if !records.is_empty() {
+                    for record in records {
+                        let data = record.data().expect("Error while reading data").as_ref();
 
-                let timestamp = record
-                    .approximate_arrival_timestamp()
-                    .unwrap()
-                    .as_secs_f64()
-                    .round() as i64;
-                let naive = NaiveDateTime::from_timestamp_opt(timestamp, 0);
-                let datetime: DateTime<Utc> = DateTime::from_utc(naive.unwrap(), Utc);
+                        let timestamp = record
+                            .approximate_arrival_timestamp()
+                            .unwrap()
+                            .as_secs_f64()
+                            .round() as i64;
+                        let naive = NaiveDateTime::from_timestamp_opt(timestamp, 0);
+                        let datetime: DateTime<Utc> = DateTime::from_utc(naive.unwrap(), Utc);
 
-                match record_to_string(data) {
-                    Ok(result) => {
-                        println!("------------------------------------------------------------");
-                        println!("Event received from shard '{}'", &shard_id);
-                        println!("Partition Key '{}'", record.partition_key().unwrap());
-                        println!("Sequence '{}'", record.sequence_number().unwrap());
-                        println!("Received at '{}'", datetime.format("%Y-%m-%d %H:%M:%S"));
-                        println!("{}", result);
-                        println!("------------------------------------------------------------");
-                        println!();
+                        match record_to_string(data) {
+                            Ok(result) => {
+                                println!(
+                                    "------------------------------------------------------------"
+                                );
+                                println!("Event received from shard '{}'", &shard_id);
+                                println!("Partition Key '{}'", record.partition_key().unwrap());
+                                println!("Sequence '{}'", record.sequence_number().unwrap());
+                                println!("Received at '{}'", datetime.format("%Y-%m-%d %H:%M:%S"));
+                                println!("{}", result);
+                                println!(
+                                    "------------------------------------------------------------"
+                                );
+                                println!();
+                            }
+                            Err(error) => eprintln!("{}", error),
+                        };
                     }
-                    Err(error) => eprintln!("{}", error),
-                };
+                }
             }
+            Err(err) => eprintln!("{}", err),
         }
         sleep(Duration::from_secs(1));
     }
