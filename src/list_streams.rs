@@ -7,26 +7,18 @@ pub async fn list_streams(client: Arc<Client>) -> Result<(), Error> {
         .list_streams()
         .send()
         .await
-        .expect("Problem listing the streams");
+        .expect("Error listing the streams");
     let streams = list_stream_output.stream_names().unwrap();
 
-    println!(
-        "========================================================================================"
-    );
-    println!(
-        "|                                   {} Stream(s) found                                 |",
-        streams.len()
-    );
-    println!(
-        "========================================================================================"
-    );
-
-    if list_stream_output.has_more_streams().unwrap() {
-        // TODO print all streams
-        println!("There is more than {} streams.", streams.len());
-    }
-    for stream in streams {
-        println!("  {}", stream);
+    println!("------------------------------------------------------------");
+    println!("Listing AWS Kinesis Data Streams in {}", client.conf().region().unwrap());
+    println!("------------------------------------------------------------");
+    for stream_summary in list_stream_output.stream_summaries().unwrap() {
+        println!("- Name: {}", stream_summary.stream_name().unwrap());
+        println!("- ARN: {}", stream_summary.stream_arn().unwrap());
+        println!("- Status: {}", stream_summary.stream_status().unwrap().as_str());
+        println!("- Mode: {}", stream_summary.stream_mode_details().unwrap().stream_mode().unwrap().as_str());
+        println!("------------------------------------------------------------");
     }
 
     Ok(())
