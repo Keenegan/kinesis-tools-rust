@@ -49,8 +49,6 @@ jobs:
             target: x86_64-apple-darwin
           - arch: x64
             target: aarch64-apple-darwin
-          - arch: x64
-            target: aarch64-unknown-linux-gnu
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust toolchain
@@ -101,12 +99,11 @@ jobs:
       - name: Build for Windows
         run: |
           cargo build --target ${{ matrix.platform.target }} --release
-          ls target/${{ matrix.platform.target }}/release
       - name: Upload Windows builds
         uses: actions/upload-artifact@v3
         with:
           name: ktr-${{ matrix.platform.target }}
-          path: target\${{ matrix.platform.target }}\release\ktr
+          path: target\${{ matrix.platform.target }}\release\ktr.exe
           if-no-files-found: error
 
   release-all:
@@ -120,7 +117,6 @@ jobs:
           - target: i686-unknown-linux-gnu
           - target: x86_64-apple-darwin
           - target: aarch64-apple-darwin
-          - target: aarch64-unknown-linux-gnu
           - target: x86_64-pc-windows-msvc
           - target: i686-pc-windows-msvc
     needs: [ release-macos, release-linux, release-windows ]
@@ -137,7 +133,6 @@ jobs:
             releases/ktr-i686-unknown-linux-gnu
             releases/ktr-x86_64-apple-darwin
             releases/ktr-aarch64-apple-darwin
-            releases/ktr-aarch64-unknown-linux-gnu
             releases/ktr-x86_64-pc-windows-msvc
             releases/ktr-i686-pc-windows-msvc
           draft: true
