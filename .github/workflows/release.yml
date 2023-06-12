@@ -19,8 +19,6 @@ jobs:
           sudo apt-get install -y cmake g++-multilib g++-mingw-w64-x86-64
           rustup target add i686-unknown-linux-gnu
           rustup target add x86_64-unknown-linux-gnu
-        env:
-          CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
       - name: Build for 32-bit Linux
         run: |
@@ -32,6 +30,7 @@ jobs:
         with:
           name: ktr-i686-linux-gnu
           path: target/i686-unknown-linux-gnu/release/ktr-i686-linux-gnu
+          if-no-files-found: error
 
       - name: Build for 64-bit Linux
         run: |
@@ -43,6 +42,7 @@ jobs:
         with:
           name: ktr-x86_64-linux-gnu
           path: target/x86_64-unknown-linux-gnu/release/ktr-x86_64-linux-gnu
+          if-no-files-found: error
 
   release-macos:
     runs-on: macos-latest
@@ -65,6 +65,38 @@ jobs:
         with:
           name: ktr-x86_64-apple-darwin
           path: target/x86_64-apple-darwin/release/ktr-x86_64-apple-darwin
+          if-no-files-found: error
+
+  release-windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        platform:
+          - arch: x64
+            target: x86_64-pc-windows-msvc
+          - arch: x86
+            target: i686-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          default: true
+
+      - name: Build for Windows
+        run: |
+          cargo build --target ${{ matrix.platform.target }} --release
+          mv target/${{ matrix.platform.target }}/release/ktr target/${{ matrix.platform.target }}/release/ktr-${{ matrix.platform.target }}
+
+      - name: Upload Windows builds
+        uses: actions/upload-artifact@v3
+        with:
+          name: ktr-${{ matrix.platform.target }}
+          path: target/${{ matrix.platform.target }}/release/ktr-${{ matrix.platform.target }}
+          if-no-files-found: error
 
   release-all:
     name: Release all artifacts

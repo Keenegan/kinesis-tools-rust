@@ -868,7 +868,7 @@ dependencies = [
 
 [[package]]
 name = "ktr"
-version = "0.0.4"
+version = "0.0.6"
 dependencies = [
  "aws-config",
  "aws-sdk-kinesis",
