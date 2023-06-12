@@ -99,6 +99,7 @@ jobs:
       - name: Build for Windows
         run: |
           cargo build --target ${{ matrix.platform.target }} --release
+          ls -la target/${{ matrix.platform.target }}/release
       - name: Upload Windows builds
         uses: actions/upload-artifact@v3
         with:
