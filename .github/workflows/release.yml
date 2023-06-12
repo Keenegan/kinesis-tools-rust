@@ -112,27 +112,21 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        platform:
-          - target: x86_64-unknown-linux-gnu
-          - target: i686-unknown-linux-gnu
-          - target: x86_64-apple-darwin
-          - target: aarch64-apple-darwin
-          - target: x86_64-pc-windows-msvc
-          - target: i686-pc-windows-msvc
+        - filename: x86_64-unknown-linux-gnu
+        - filename: i686-unknown-linux-gnu
+        - filename: x86_64-apple-darwin
+        - filename: aarch64-apple-darwin
+        - filename: x86_64-pc-windows-msvc.exe
+        - filename: i686-pc-windows-msvc.exe
     needs: [ release-macos, release-linux, release-windows ]
     steps:
       - run: mkdir -p releases
       - uses: actions/download-artifact@master
         with:
-          name: ktr-${{ matrix.platform.target }}
+          name: ktr-${{ matrix.filename }}
           path: releases
       - uses: softprops/action-gh-release@v1
         with:
           files: |
-            releases/ktr-x86_64-unknown-linux-gnu
-            releases/ktr-i686-unknown-linux-gnu
-            releases/ktr-x86_64-apple-darwin
-            releases/ktr-aarch64-apple-darwin
-            releases/ktr-x86_64-pc-windows-msvc.exe
-            releases/ktr-i686-pc-windows-msvc.exe
+            releases/ktr-${{ matrix.filename }}
           draft: true
