@@ -41,28 +41,35 @@ jobs:
 
   release-macos:
     runs-on: macos-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        platform:
+          - arch: x64
+            target: x86_64-apple-darwin
+          - arch: x64
+            target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-          target: aarch64-apple-darwin
+          target: ${{ matrix.platform.target }}
           default: true
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
         with:
           prefix-key: ktr
           shared-key: macos-latest
-      - name: Build for 64-bit Mac
+      - name: Build for Mac
         run: |
-          cargo build --target x86_64-apple-darwin --release
-          mv target/x86_64-apple-darwin/release/ktr target/x86_64-apple-darwin/release/ktr-x86_64-apple-darwin
-      - name: Upload 64-bit Mac build
+          cargo build --target ${{ matrix.platform.target }} --release
+      - name: Upload Mac builds
         uses: actions/upload-artifact@v3
         with:
-          name: ktr-x86_64-apple-darwin
-          path: target/x86_64-apple-darwin/release/ktr-x86_64-apple-darwin
+          name: ktr-${{ matrix.platform.target }}
+          path: target/${{ matrix.platform.target }}/release/ktr
           if-no-files-found: error
 
   release-windows:
@@ -108,6 +115,7 @@ jobs:
         platform:
           - target: x86_64-unknown-linux-gnu
           - target: i686-unknown-linux-gnu
+          - target: x86_64-apple-darwin
           - target: aarch64-apple-darwin
           - target: x86_64-pc-windows-msvc
           - target: i686-pc-windows-msvc
@@ -123,6 +131,7 @@ jobs:
           files: |
             releases/ktr-x86_64-unknown-linux-gnu
             releases/ktr-i686-unknown-linux-gnu
+            releases/ktr-x86_64-apple-darwin
             releases/ktr-aarch64-apple-darwin
             releases/ktr-x86_64-pc-windows-msvc
             releases/ktr-i686-pc-windows-msvc
