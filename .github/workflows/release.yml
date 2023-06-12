@@ -76,12 +76,13 @@ jobs:
           - arch: x86
             target: i686-pc-windows-msvc
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+          target: ${{ matrix.platform.target }}
           default: true
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
