@@ -102,7 +102,7 @@ jobs:
       - name: Upload Windows builds
         uses: actions/upload-artifact@v3
         with:
-          name: ktr-${{ matrix.platform.target }}
+          name: ktr-${{ matrix.platform.target }}.exe
           path: target\${{ matrix.platform.target }}\release\ktr.exe
           if-no-files-found: error
 
@@ -133,6 +133,6 @@ jobs:
             releases/ktr-i686-unknown-linux-gnu
             releases/ktr-x86_64-apple-darwin
             releases/ktr-aarch64-apple-darwin
-            releases/ktr-x86_64-pc-windows-msvc
-            releases/ktr-i686-pc-windows-msvc
+            releases/ktr-x86_64-pc-windows-msvc.exe
+            releases/ktr-i686-pc-windows-msvc.exe
           draft: true
