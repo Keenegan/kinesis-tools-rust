@@ -19,17 +19,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake g++-multilib g++-mingw-w64-x86-64
           rustup target add ${{ matrix.platform.target }}
-
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: ktr
+          shared-key: ubuntu-latest
       - name: Build for Linux
         run: |
           cargo build --target=${{ matrix.platform.target }} --release
-
       - name: Upload Linux build
         uses: actions/upload-artifact@v3
         with:
@@ -47,12 +49,15 @@ jobs:
           toolchain: stable
           target: aarch64-apple-darwin
           default: true
-
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: ktr
+          shared-key: macos-latest
       - name: Build for 64-bit Mac
         run: |
           cargo build --target x86_64-apple-darwin --release
           mv target/x86_64-apple-darwin/release/ktr target/x86_64-apple-darwin/release/ktr-x86_64-apple-darwin
-
       - name: Upload 64-bit Mac build
         uses: actions/upload-artifact@v3
         with:
@@ -78,11 +83,14 @@ jobs:
         with:
           toolchain: stable
           default: true
-
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: ktr
+          shared-key: windows-latest
       - name: Build for Windows
         run: |
           cargo build --target ${{ matrix.platform.target }} --release
-
       - name: Upload Windows builds
         uses: actions/upload-artifact@v3
         with:
@@ -93,26 +101,28 @@ jobs:
   release-all:
     name: Release all artifacts
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        platform:
+          - target: x86_64-unknown-linux-gnu
+          - target: i686-unknown-linux-gnu
+          - target: aarch64-apple-darwin
+          - target: x86_64-pc-windows-msvc
+          - target: i686-pc-windows-msvc
     needs: [ release-macos, release-linux, release-windows ]
     steps:
       - run: mkdir -p releases
       - uses: actions/download-artifact@master
         with:
-          name: ktr-i686-linux-gnu
+          name: ktr-${{ matrix.platform.target }}
           path: releases
-      - uses: actions/download-artifact@master
-        with:
-          name: ktr-x86_64-linux-gnu
-          path: releases
-      - uses: actions/download-artifact@master
-        with:
-          name: ktr-x86_64-apple-darwin
-          path: releases
-
       - uses: softprops/action-gh-release@v1
         with:
           files: |
-            releases/ktr-i686-linux-gnu
-            releases/ktr-x86_64-linux-gnu
-            releases/ktr-x86_64-apple-darwin
+            releases/ktr-x86_64-unknown-linux-gnu
+            releases/ktr-i686-unknown-linux-gnu
+            releases/ktr-aarch64-apple-darwin
+            releases/ktr-x86_64-pc-windows-msvc
+            releases/ktr-i686-pc-windows-msvc
           draft: true
