@@ -32,12 +32,12 @@ jobs:
       - name: Build for Linux
         run: |
           cargo build --target=${{ matrix.platform.target }} --release
-      - name: Upload Linux build
-        uses: actions/upload-artifact@v3
+      - name: Release Linux builds
+        uses: softprops/action-gh-release@v1
         with:
-          name: ktr-${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/ktr
-          if-no-files-found: error
+          files: |
+            target/${{ matrix.platform.target }}/release/ktr
+          draft: true
 
   release-macos:
     runs-on: macos-latest
@@ -56,7 +56,6 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.platform.target }}
-          default: true
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
         with:
@@ -65,12 +64,12 @@ jobs:
       - name: Build for Mac
         run: |
           cargo build --target ${{ matrix.platform.target }} --release
-      - name: Upload Mac builds
-        uses: actions/upload-artifact@v3
+      - name: Release Mac builds
+        uses: softprops/action-gh-release@v1
         with:
-          name: ktr-${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/ktr
-          if-no-files-found: error
+          files: |
+            target/${{ matrix.platform.target }}/release/ktr
+          draft: true
 
   release-windows:
     runs-on: windows-latest
@@ -90,7 +89,6 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.platform.target }}
-          default: true
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
         with:
@@ -99,40 +97,9 @@ jobs:
       - name: Build for Windows
         run: |
           cargo build --target ${{ matrix.platform.target }} --release
-      - name: Upload Windows builds
-        uses: actions/upload-artifact@v3
-        with:
-          name: ktr-${{ matrix.platform.target }}.exe
-          path: target\${{ matrix.platform.target }}\release\ktr.exe
-          if-no-files-found: error
-
-  release-all:
-    name: Release all artifacts
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        platform:
-          - filename: x86_64-unknown-linux-gnu
-          - filename: i686-unknown-linux-gnu
-          - filename: x86_64-apple-darwin
-          - filename: aarch64-apple-darwin
-          - filename: x86_64-pc-windows-msvc.exe
-          - filename: i686-pc-windows-msvc.exe
-    needs: [ release-macos, release-linux, release-windows ]
-    steps:
-      - run: mkdir -p releases
-      - uses: actions/download-artifact@master
-        with:
-          name: ktr-${{ matrix.platform.filename }}
-          path: releases
-      - uses: softprops/action-gh-release@v1
+      - name: Release Windows builds
+        uses: softprops/action-gh-release@v1
         with:
           files: |
-            releases/ktr-x86_64-unknown-linux-gnu
-            releases/ktr-i686-unknown-linux-gnu
-            releases/ktr-x86_64-apple-darwin
-            releases/ktr-aarch64-apple-darwin
-            releases/ktr-x86_64-pc-windows-msvc.exe
-            releases/ktr-i686-pc-windows-msvc.exe
+            target\${{ matrix.platform.target }}\release\ktr.exe
           draft: true
