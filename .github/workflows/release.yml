@@ -32,11 +32,12 @@ jobs:
       - name: Build for Linux
         run: |
           cargo build --target=${{ matrix.platform.target }} --release
+          mv target/${{ matrix.platform.target }}/release/ktr target/${{ matrix.platform.target }}/release/ktr-${{ matrix.platform.target }}
       - name: Release Linux builds
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/ktr
+            target/${{ matrix.platform.target }}/release/ktr-${{ matrix.platform.target }}
           draft: true
 
   release-macos:
@@ -64,11 +65,12 @@ jobs:
       - name: Build for Mac
         run: |
           cargo build --target ${{ matrix.platform.target }} --release
+          mv target/${{ matrix.platform.target }}/release/ktr target/${{ matrix.platform.target }}/release/ktr-${{ matrix.platform.target }}
       - name: Release Mac builds
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/ktr
+            target/${{ matrix.platform.target }}/release/ktr-${{ matrix.platform.target }}
           draft: true
 
   release-windows:
@@ -97,9 +99,10 @@ jobs:
       - name: Build for Windows
         run: |
           cargo build --target ${{ matrix.platform.target }} --release
+          mv target/${{ matrix.platform.target }}/release/ktr.exe target/${{ matrix.platform.target }}/release/ktr-${{ matrix.platform.target }}.exe
       - name: Release Windows builds
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target\${{ matrix.platform.target }}\release\ktr.exe
+            target\${{ matrix.platform.target }}\release\ktr-${{ matrix.platform.target }}.exe
           draft: true
