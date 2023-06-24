@@ -9,7 +9,7 @@ repository = "https://github.com/Keenegan/kinesis-tools-rust"
 aws-config = { default-features = false, features = ["rustls"], version = "0.55.0" }
 aws-sdk-kinesis = { default-features = false, version = "0.26.0" }
 base64 = { version = "0.21.0", features = ["std"], default-features = false }
-clap = { version = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.4", features = ["derive", "env"] }
 chrono = { version = "0.4.24", default-features = false, features = ["alloc", "std"]}
 flate2 = "1.0.25"
 serde_json = { version = "1.0.95", features = ["preserve_order"], default-features = false }

@@ -7,7 +7,7 @@ This project allows you to interact with [AWS Kinesis stream](https://aws.amazon
 ```bash
 KTR (Kinesis Tools Rust) allows you to interact with AWS Kinesis data streams
 
-Usage: ktr [AWS_PROFILE] <COMMAND>
+Usage: ktr [OPTIONS] <COMMAND>
 
 Commands:
   list    Lists your Kinesis data streams
@@ -17,13 +17,10 @@ Commands:
   put     Writes a single data record into an Amazon Kinesis data stream
   help    Print this message or the help of the given subcommand(s)
 
-Arguments:
-  [AWS_PROFILE]  Which AWS profile to use. If not provided, KTR will search for an env variable with the same name
-
 Options:
-  -h, --help     Print help
-  -V, --version  Print version
-
+  -p  --profile <PROFILE>  The AWS profile to use, if not set the environment variable AWS_PROFILE will be used [env: AWS_PROFILE=6cloud-staging]
+  -h, --help               Print help
+  -V, --version            Print version
 ```
 
  ## Download
