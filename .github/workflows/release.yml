@@ -12,11 +12,11 @@ jobs:
       fail-fast: true
       matrix:
         platform:
-          - arch: x64
+          - arch: 64-bit Linux
             target: x86_64-unknown-linux-gnu
-          - arch: x86
+          - arch: 32-bit Linux
             target: i686-unknown-linux-gnu
-          - arch: arm64
+          - arch: ARM64 Linux
             target: aarch64-unknown-linux-gnu
     steps:
       - name: Checkout
@@ -39,7 +39,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/*
+            target/${{ matrix.platform.target }}/release/${{ matrix.platform.target }}
           draft: true
 
   release-macos:
@@ -48,9 +48,9 @@ jobs:
       fail-fast: true
       matrix:
         platform:
-          - arch: x64
+          - arch: 64-bit macOS
             target: x86_64-apple-darwin
-          - arch: x64
+          - arch: ARM64 macOS
             target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v3
@@ -72,7 +72,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/*
+            target/${{ matrix.platform.target }}/release/${{ matrix.platform.target }}
           draft: true
 
   release-windows:
@@ -81,9 +81,9 @@ jobs:
       fail-fast: true
       matrix:
         platform:
-          - arch: x64
+          - arch: 64-bit MSVC
             target: x86_64-pc-windows-msvc
-          - arch: x86
+          - arch: 32-bit MSVC
             target: i686-pc-windows-msvc
     steps:
       - name: Checkout
@@ -106,5 +106,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/*
+            target/${{ matrix.platform.target }}/release/${{ matrix.platform.target }}.exe
           draft: true
