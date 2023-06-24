@@ -37,7 +37,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/ktr-${{ matrix.platform.target }}
+            target/${{ matrix.platform.target }}/release/*
           draft: true
 
   release-macos:
@@ -70,7 +70,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/ktr-${{ matrix.platform.target }}
+            target/${{ matrix.platform.target }}/release/*
           draft: true
 
   release-windows:
@@ -104,5 +104,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target\${{ matrix.platform.target }}\release\ktr-${{ matrix.platform.target }}.exe
+            target/${{ matrix.platform.target }}/release/*
           draft: true
